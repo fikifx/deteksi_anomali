@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Master – Monitoring Anggaran Perkebunan Sawit</title>
+  <meta name="description" content="Halaman admin profesional untuk monitoring dan manajemen anggaran norma kerja perkebunan kelapa sawit. CRUD, import, dan export data Excel." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg-deep: #0a0f1a;
+      --bg-card: rgba(15,25,45,0.85);
+      --bg-glass: rgba(20,35,65,0.60);
+      --border: rgba(56,189,130,0.18);
+      --border-h: rgba(56,189,130,0.45);
+      --accent: #38bd82;
+      --accent-d: #25a06a;
+      --accent-l: #5ee8a8;
+      --text-1: #e8f5ef;
+      --text-2: #8ab8a0;
+      --text-3: #4d7a62;
+      --danger: #ff5c6a;
+      --warning: #ffb347;
+      --info: #4fc3f7;
+      --purple: #a78bfa;
+      --radius: 14px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.45);
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-1);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse 80% 60% at 20% -10%, rgba(56,189,130,0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 110%, rgba(79,195,247,0.07) 0%, transparent 60%);
+    }
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed; left:0; top:0; bottom:0; width:260px;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+      display:flex; flex-direction:column;
+      z-index:100;
+    }
+    .sidebar-logo { padding:28px 24px 20px; border-bottom:1px solid var(--border); }
+    .logo-icon {
+      width:44px; height:44px; border-radius:12px;
+      background:linear-gradient(135deg,var(--accent),var(--accent-d));
+      display:flex; align-items:center; justify-content:center;
+      font-size:22px; margin-bottom:12px;
+      box-shadow:0 4px 16px rgba(56,189,130,0.35);
+    }
+    .sidebar-logo h2 { font-size:15px; font-weight:700; color:var(--text-1); line-height:1.3; }
+    .sidebar-logo p  { font-size:11px; color:var(--text-2); margin-top:3px; }
+    .sidebar-nav { flex:1; padding:16px 12px; overflow-y:auto; }
+    .nav-section-label {
+      font-size:10px; font-weight:600; text-transform:uppercase;
+      letter-spacing:1.2px; color:var(--text-3); padding:8px 12px 6px;
+    }
+    .nav-item {
+      display:flex; align-items:center; gap:12px;
+      padding:11px 14px; border-radius:10px; margin-bottom:2px;
+      cursor:pointer; font-size:13.5px; font-weight:500;
+      color:var(--text-2); transition:.2s; text-decoration:none;
+    }
+    .nav-item:hover { background:rgba(56,189,130,0.1); color:var(--text-1); }
+    .nav-item.active {
+      background:linear-gradient(90deg,rgba(56,189,130,0.22),rgba(56,189,130,0.05));
+      color:var(--accent-l); border-left:3px solid var(--accent); padding-left:11px;
+    }
+    .nav-item .icon { width:18px; text-align:center; font-size:15px; }
+    .sidebar-footer { padding:16px 24px; border-top:1px solid var(--border); font-size:11px; color:var(--text-3); }
+    /* MAIN */
+    .main-wrap { margin-left:260px; min-height:100vh; display:flex; flex-direction:column; }
+    /* TOPBAR */
+    .topbar {
+      position:sticky; top:0; z-index:90;
+      background:rgba(10,15,26,0.9); backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);
+      padding:0 32px; height:64px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .breadcrumb { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-2); }
+    .breadcrumb span { color:var(--accent); font-weight:600; }
+    .topbar-right { display:flex; align-items:center; gap:12px; }
+    .badge-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); animation:pulse-dot 2s infinite; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .avatar {
+      width:36px; height:36px; border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),var(--accent-d));
+      display:flex;align-items:center;justify-content:center;
+      font-weight:700; font-size:14px; color:#fff; cursor:pointer;
+    }
+    /* CONTENT */
+    .content { flex:1; padding:28px 32px; }
+    .page-header { margin-bottom:24px; }
+    .page-header h1 { font-size:26px; font-weight:800; color:var(--text-1); }
+    .page-header p  { font-size:13px; color:var(--text-2); margin-top:4px; }
+    /* STAT CARDS */
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .stat-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius); padding:20px 22px;
+      backdrop-filter:blur(12px); position:relative; overflow:hidden; transition:.25s;
+    }
+    .stat-card::before {
+      content:''; position:absolute; top:0;left:0;right:0;
+      height:3px; border-radius:var(--radius) var(--radius) 0 0;
+    }
+    .stat-card.green::before { background:linear-gradient(90deg,var(--accent),var(--accent-l)); }
+    .stat-card.blue::before  { background:linear-gradient(90deg,var(--info),#81d4fa); }
+    .stat-card.purple::before{ background:linear-gradient(90deg,var(--purple),#c4b5fd); }
+    .stat-card.orange::before{ background:linear-gradient(90deg,var(--warning),#ffd580); }
+    .stat-card:hover { border-color:var(--border-h); transform:translateY(-2px); box-shadow:var(--shadow); }
+    .stat-card .label { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.9px; color:var(--text-3); }
+    .stat-card .value { font-size:30px; font-weight:800; margin:8px 0 4px; }
+    .stat-card.green .value { color:var(--accent-l); }
+    .stat-card.blue .value  { color:var(--info); }
+    .stat-card.purple .value{ color:var(--purple); }
+    .stat-card.orange .value{ color:var(--warning); }
+    .stat-card .sub { font-size:12px; color:var(--text-2); }
+    .stat-card .icon { position:absolute; top:18px; right:18px; font-size:28px; opacity:.15; }
+    /* TABLE CARD */
+    .table-card {
+      background:var(--bg-card); border:1px solid var(--border);
+      border-radius:var(--radius); backdrop-filter:blur(16px); overflow:hidden;
+    }
+    /* TOOLBAR */
+    .toolbar {
+      padding:18px 22px; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+    }
+    .toolbar-left { display:flex; align-items:center; gap:10px; flex:1; flex-wrap:wrap; }
+    .toolbar-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .search-box { position:relative; width:280px; }
+    .search-box input {
+      width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--border);
+      border-radius:10px; padding:9px 12px 9px 38px;
+      color:var(--text-1); font-size:13px; font-family:inherit; transition:.2s; outline:none;
+    }
+    .search-box input:focus { border-color:var(--border-h); background:rgba(56,189,130,0.06); }
+    .search-box input::placeholder { color:var(--text-3); }
+    .search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-3); font-size:14px; }
+    .filter-select {
+      background:rgba(255,255,255,0.06); border:1px solid var(--border);
+      border-radius:10px; padding:9px 12px;
+      color:var(--text-1); font-size:13px; font-family:inherit; outline:none; cursor:pointer; transition:.2s;
+    }
+    .filter-select:focus { border-color:var(--border-h); }
+    .filter-select option { background:#0f1928; }
+    .btn {
+      display:inline-flex; align-items:center; gap:7px;
+      padding:9px 18px; border-radius:10px; border:none;
+      font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:.2s; white-space:nowrap;
+    }
+    .btn-primary {
+      background:linear-gradient(135deg,var(--accent),var(--accent-d));
+      color:#fff; box-shadow:0 4px 14px rgba(56,189,130,0.3);
+    }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(56,189,130,0.45); }
+    .btn-outline { background:transparent; color:var(--text-2); border:1px solid var(--border); }
+    .btn-outline:hover { border-color:var(--border-h); color:var(--text-1); background:rgba(56,189,130,0.06); }
+    .btn-excel { background:rgba(33,115,70,0.2); color:#5ee8a8; border:1px solid rgba(56,189,130,0.3); }
+    .btn-excel:hover { background:rgba(33,115,70,0.35); border-color:var(--accent); }
+    .btn-import { background:rgba(79,195,247,0.12); color:var(--info); border:1px solid rgba(79,195,247,0.25); }
+    .btn-import:hover { background:rgba(79,195,247,0.22); }
+    .btn-danger-sm {
+      background:rgba(255,92,106,0.1); color:var(--danger);
+      border:1px solid rgba(255,92,106,0.2); padding:6px 12px; font-size:12px;
+    }
+    .btn-danger-sm:hover { background:rgba(255,92,106,0.22); }
+    .btn-edit-sm {
+      background:rgba(167,139,250,0.1); color:var(--purple);
+      border:1px solid rgba(167,139,250,0.2); padding:6px 12px; font-size:12px;
+    }
+    .btn-edit-sm:hover { background:rgba(167,139,250,0.22); }
+    /* TABLE */
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    thead th {
+      background:rgba(10,15,26,0.6); padding:12px 16px; text-align:center;
+      font-size:11px; font-weight:700; text-transform:uppercase;
+      letter-spacing:.8px; color:var(--text-3); border-bottom:1px solid var(--border);
+      white-space:nowrap;
+    }
+    thead th.left { text-align:left; }
+    thead .th-group {
+      background:rgba(56,189,130,0.06); font-size:11px; font-weight:700;
+      color:var(--accent); padding:8px 16px; border-bottom:1px solid var(--border);
+    }
+    tbody tr { border-bottom:1px solid rgba(56,189,130,0.07); transition:.15s; }
+    tbody tr:hover { background:rgba(56,189,130,0.05); }
+    tbody tr:last-child { border-bottom:none; }
+    td { padding:11px 16px; vertical-align:middle; text-align:center; color:var(--text-2); }
+    td.left { text-align:left; }
+    .badge-status {
+      display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px;
+      font-size:11px; font-weight:600;
+      background:rgba(56,189,130,0.12); color:var(--accent-l); border:1px solid rgba(56,189,130,0.22);
+      white-space:nowrap;
+    }
+    .badge-tbm { background:rgba(79,195,247,0.12); color:var(--info); border-color:rgba(79,195,247,0.22); }
+    .badge-tm  { background:rgba(167,139,250,0.12); color:var(--purple); border-color:rgba(167,139,250,0.22); }
+    .badge-tmtua { background:rgba(255,179,71,0.12); color:var(--warning); border-color:rgba(255,179,71,0.22); }
+    .num-cell { color:var(--text-1); font-weight:600; font-variant-numeric:tabular-nums; }
+    .num-cell.accent { color:var(--accent-l); }
+    /* PAGINATION */
+    .pagination-bar {
+      padding:14px 22px; border-top:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;
+    }
+    .pagination-info { font-size:12px; color:var(--text-3); }
+    .pagination-btns { display:flex; align-items:center; gap:6px; }
+    .page-btn {
+      width:32px; height:32px; border-radius:8px; border:1px solid var(--border);
+      background:transparent; color:var(--text-2); font-size:13px;
+      cursor:pointer; display:flex;align-items:center;justify-content:center;
+      transition:.15s; font-family:inherit;
+    }
+    .page-btn:hover { border-color:var(--border-h); color:var(--text-1); }
+    .page-btn.active { background:linear-gradient(135deg,var(--accent),var(--accent-d)); color:#fff; border-color:transparent; }
+    .page-btn:disabled { opacity:.3; cursor:not-allowed; }
+    /* MODAL */
+    .modal-overlay {
+      position:fixed; inset:0; z-index:1000; background:rgba(5,10,20,0.8);
+      backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center;
+      animation:fadeIn .2s;
+    }
+    .modal-overlay.open { display:flex; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .modal {
+      background:linear-gradient(145deg,#0f1e38,#0a1528);
+      border:1px solid var(--border-h); border-radius:18px;
+      width:min(92vw,780px); max-height:90vh; overflow-y:auto;
+      box-shadow:0 24px 80px rgba(0,0,0,0.6); animation:slideUp .25s;
+    }
+    @keyframes slideUp { from{transform:translateY(24px);opacity:0} to{transform:translateY(0);opacity:1} }
+    .modal-header {
+      padding:22px 28px 18px; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .modal-header h3 { font-size:18px; font-weight:700; }
+    .modal-close {
+      width:34px;height:34px;border-radius:9px;border:1px solid var(--border);
+      background:transparent;color:var(--text-2);font-size:18px;
+      cursor:pointer;display:flex;align-items:center;justify-content:center; transition:.15s;
+    }
+    .modal-close:hover { border-color:var(--danger);color:var(--danger); }
+    .modal-body { padding:24px 28px; }
+    .modal-footer { padding:16px 28px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; }
+    /* FORM */
+    .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    .form-group { display:flex; flex-direction:column; gap:6px; }
+    .form-group.full { grid-column:1/-1; }
+    .form-group label { font-size:12px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.7px; }
+    .form-group input, .form-group select {
+      background:rgba(255,255,255,0.06); border:1px solid var(--border);
+      border-radius:10px; padding:10px 14px;
+      color:var(--text-1); font-size:13.5px; font-family:inherit; outline:none; transition:.2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color:var(--border-h); background:rgba(56,189,130,0.06);
+      box-shadow:0 0 0 3px rgba(56,189,130,0.1);
+    }
+    .form-group select option { background:#0f1928; }
+    .form-divider {
+      grid-column:1/-1; padding:8px 0 4px;
+      font-size:11px; font-weight:700; text-transform:uppercase;
+      letter-spacing:1px; color:var(--text-3); border-bottom:1px solid var(--border);
+    }
+    /* TOAST */
+    .toast-container { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column; gap:10px; }
+    .toast {
+      background:var(--bg-card); border:1px solid var(--border-h); border-radius:12px;
+      padding:14px 20px; display:flex;align-items:center;gap:12px;
+      font-size:13.5px; font-weight:500;
+      box-shadow:0 8px 32px rgba(0,0,0,0.4); backdrop-filter:blur(12px);
+      animation:slideIn .3s ease; min-width:260px; max-width:380px;
+    }
+    @keyframes slideIn { from{transform:translateX(60px);opacity:0} to{transform:translateX(0);opacity:1} }
+    .toast.success .toast-icon { color:var(--accent); }
+    .toast.error .toast-icon { color:var(--danger); }
+    .toast.info .toast-icon { color:var(--info); }
+    /* CONFIRM MODAL */
+    .confirm-modal { background:linear-gradient(145deg,#1a0f1e,#120a1a); border-color:rgba(255,92,106,0.3); }
+    .confirm-modal .modal-header h3 { color:var(--danger); }
+    /* IMPORT */
+    .import-zone {
+      border:2px dashed var(--border); border-radius:14px; padding:32px;
+      text-align:center; cursor:pointer; transition:.2s;
+    }
+    .import-zone:hover { border-color:var(--accent); background:rgba(56,189,130,0.04); }
+    .import-zone.dragover { border-color:var(--accent-l); background:rgba(56,189,130,0.08); }
+    .import-zone .zone-icon { font-size:40px; margin-bottom:12px; opacity:.6; }
+    .import-zone p { font-size:14px; color:var(--text-2); }
+    .import-zone span { font-size:12px; color:var(--text-3); margin-top:6px; display:block; }
+    .progress-bar-wrap { background:rgba(255,255,255,0.07); border-radius:100px; height:6px; overflow:hidden; margin:12px 0; }
+    .progress-bar { height:100%; border-radius:100px; background:linear-gradient(90deg,var(--accent),var(--accent-l)); transition:width .4s; }
+    /* EMPTY */
+    .empty-state { padding:60px 32px; text-align:center; }
+    .empty-state .icon { font-size:48px; margin-bottom:16px; opacity:.4; }
+    .empty-state h3 { font-size:17px; font-weight:600; color:var(--text-2); }
+    .empty-state p  { font-size:13px; color:var(--text-3); margin-top:6px; }
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:rgba(56,189,130,0.2); border-radius:100px; }
+    ::-webkit-scrollbar-thumb:hover { background:rgba(56,189,130,0.4); }
+    @media(max-width:1100px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:768px) { .main-wrap { margin-left:0; } .form-grid { grid-template-columns:1fr; } .content { padding:16px; } }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🌴</div>
+    <h2>Anomali Sawit</h2>
+    <p>Budget Monitoring System</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Navigasi</div>
+    <a href="anomali_system_overview.html" class="nav-item">
+      <span class="icon">📊</span> Dashboard Overview
+    </a>
+    <a href="#" class="nav-item active">
+      <span class="icon">📋</span> Master Data Norma
+    </a>
+    <div class="nav-section-label" style="margin-top:12px">Laporan</div>
+    <a href="#" class="nav-item"><span class="icon">📈</span> Analisis Anggaran</a>
+    <a href="#" class="nav-item"><span class="icon">🔍</span> Deteksi Anomali</a>
+    <a href="#" class="nav-item"><span class="icon">🗓️</span> Rencana Kerja</a>
+    <div class="nav-section-label" style="margin-top:12px">Pengaturan</div>
+    <a href="#" class="nav-item"><span class="icon">⚙️</span> Konfigurasi</a>
+    <a href="#" class="nav-item"><span class="icon">👥</span> Pengguna</a>
+  </nav>
+  <div class="sidebar-footer">v1.0.0 &nbsp;·&nbsp; © 2025 Anomali Sawit</div>
+</aside>
+
+<div class="main-wrap">
+  <header class="topbar">
+    <div class="breadcrumb">Home &rsaquo; <span>Master Data Norma</span></div>
+    <div class="topbar-right">
+      <div class="badge-dot"></div>
+      <span style="font-size:12px;color:var(--text-2)">Sistem Aktif</span>
+      <div class="avatar" title="Admin">A</div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="page-header">
+      <h1>📋 Master Data Norma Kerja</h1>
+      <p>Manajemen norma kerja per topografi untuk monitoring anggaran perkebunan kelapa sawit</p>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card green">
+        <span class="icon">📋</span>
+        <div class="label">Total Data</div>
+        <div class="value" id="statTotal">0</div>
+        <div class="sub">Item kerja terdaftar</div>
+      </div>
+      <div class="stat-card blue">
+        <span class="icon">🌱</span>
+        <div class="label">Status Tanaman</div>
+        <div class="value" id="statStatus">0</div>
+        <div class="sub">Kategori umur tanaman</div>
+      </div>
+      <div class="stat-card purple">
+        <span class="icon">📝</span>
+        <div class="label">Item Kerja Unik</div>
+        <div class="value" id="statItems">0</div>
+        <div class="sub">Jenis pekerjaan berbeda</div>
+      </div>
+      <div class="stat-card orange">
+        <span class="icon">📊</span>
+        <div class="label">Terakhir Update</div>
+        <div class="value" style="font-size:16px;margin-top:14px" id="statDate">–</div>
+        <div class="sub">Waktu sinkronisasi data</div>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Cari item kerja atau status..." oninput="applyFilter()" />
+          </div>
+          <select class="filter-select" id="filterStatus" onchange="applyFilter()">
+            <option value="">Semua Status</option>
+          </select>
+          <select class="filter-select" id="filterRows" onchange="applyFilter()">
+            <option value="20">20 baris</option>
+            <option value="50">50 baris</option>
+            <option value="100">100 baris</option>
+            <option value="0">Semua</option>
+          </select>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn btn-import" onclick="openImport()">📥 Import Excel</button>
+          <button class="btn btn-excel" onclick="exportExcel()">📤 Export Excel</button>
+          <button class="btn btn-primary" onclick="openAdd()">＋ Tambah Data</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table id="masterTable">
+          <thead>
+            <tr>
+              <th class="th-group left" colspan="2">Identifikasi</th>
+              <th class="th-group" colspan="3">🏔️ Datar</th>
+              <th class="th-group" colspan="3">⛰️ Roling 1</th>
+              <th class="th-group" colspan="3">🌊 Roling 2 / Rendahan</th>
+              <th class="th-group">Aksi</th>
+            </tr>
+            <tr>
+              <th class="left" style="min-width:130px">Status Umur</th>
+              <th class="left" style="min-width:200px">Item Kerja</th>
+              <th style="min-width:90px">Norma<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
+              <th style="min-width:80px">Rotasi<br/><small style="font-weight:400;color:var(--text-3)">Kerja</small></th>
+              <th style="min-width:90px">N×R<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
+              <th style="min-width:90px">Norma<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
+              <th style="min-width:80px">Rotasi<br/><small style="font-weight:400;color:var(--text-3)">Kerja</small></th>
+              <th style="min-width:90px">N×R<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
+              <th style="min-width:90px">Norma<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
+              <th style="min-width:80px">Rotasi<br/><small style="font-weight:400;color:var(--text-3)">Kerja</small></th>
+              <th style="min-width:90px">N×R<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
+              <th style="min-width:110px">Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="pagination-bar">
+        <div class="pagination-info" id="paginationInfo">Menampilkan 0 data</div>
+        <div class="pagination-btns" id="paginationBtns"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- MODAL: ADD/EDIT -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="formModalTitle">Tambah Data Norma</h3>
+      <button class="modal-close" onclick="closeFormModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Status Umur Tanaman *</label>
+          <select id="fStatus">
+            <option value="">Pilih Status</option>
+            <option value="TM-1">TM-1</option>
+            <option value="TM-2">TM-2</option>
+            <option value="TM3-5">TM3-5</option>
+            <option value="TM6-10">TM6-10</option>
+            <option value="TM11-17">TM11-17</option>
+            <option value="TM TUA">TM TUA</option>
+            <option value="TBM 1">TBM 1</option>
+            <option value="TBM 2">TBM 2</option>
+            <option value="TBM 3">TBM 3</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Item Kerja *</label>
+          <input type="text" id="fItem" placeholder="Contoh: CW - Manual" />
+        </div>
+        <div class="form-divider">🏔️ Datar</div>
+        <div class="form-group">
+          <label>Norma (Hk/Ha)</label>
+          <input type="number" id="fDatarNorma" step="0.0001" placeholder="0.0000" />
+        </div>
+        <div class="form-group">
+          <label>Rotasi Kerja</label>
+          <input type="number" id="fDatarRotasi" step="0.5" placeholder="0" />
+        </div>
+        <div class="form-divider">⛰️ Roling 1</div>
+        <div class="form-group">
+          <label>Norma (Hk/Ha)</label>
+          <input type="number" id="fRoling1Norma" step="0.0001" placeholder="0.0000" />
+        </div>
+        <div class="form-group">
+          <label>Rotasi Kerja</label>
+          <input type="number" id="fRoling1Rotasi" step="0.5" placeholder="0" />
+        </div>
+        <div class="form-divider">🌊 Roling 2 / Rendahan</div>
+        <div class="form-group">
+          <label>Norma (Hk/Ha)</label>
+          <input type="number" id="fRoling2Norma" step="0.0001" placeholder="0.0000" />
+        </div>
+        <div class="form-group">
+          <label>Rotasi Kerja</label>
+          <input type="number" id="fRoling2Rotasi" step="0.5" placeholder="0" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeFormModal()">Batal</button>
+      <button class="btn btn-primary" onclick="submitForm()" id="formSubmitBtn">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DELETE -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal confirm-modal" style="max-width:440px">
+    <div class="modal-header">
+      <h3>🗑️ Hapus Data</h3>
+      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-2);font-size:14px;line-height:1.8">
+        Apakah Anda yakin ingin menghapus item ini?<br/>
+        <strong id="deleteItemName" style="color:var(--text-1)"></strong><br/><br/>
+        <span style="color:var(--danger);font-size:12.5px">⚠️ Tindakan ini tidak dapat dibatalkan.</span>
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeDeleteModal()">Batal</button>
+      <button class="btn" style="background:var(--danger);color:#fff" onclick="confirmDelete()">🗑️ Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: IMPORT -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <h3>📥 Import Data dari Excel</h3>
+      <button class="modal-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="import-zone" id="importZone" onclick="document.getElementById('importFile').click()">
+        <div class="zone-icon">📂</div>
+        <p>Klik untuk memilih file Excel (.xlsx / .xls)</p>
+        <span>atau drag &amp; drop file di sini</span>
+        <input type="file" id="importFile" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile(event)" />
+      </div>
+      <div id="importPreview" style="display:none;margin-top:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:13px;color:var(--text-2)" id="importFileInfo"></span>
+          <span id="importRowCount" style="font-size:12px;color:var(--accent)"></span>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar" id="importProgress" style="width:0%"></div></div>
+      </div>
+      <div style="margin-top:16px;padding:14px;background:rgba(56,189,130,0.06);border-radius:10px;border:1px solid var(--border)">
+        <p style="font-size:12px;color:var(--text-2);line-height:1.9">
+          <strong style="color:var(--accent)">Format Excel yang didukung:</strong><br/>
+          Kolom A: Status Umur Tanaman &nbsp;|&nbsp; Kolom B: Item Kerja<br/>
+          Kolom C–E: Datar (Norma, Rotasi, NxR)<br/>
+          Kolom F–H: Roling 1 (Norma, Rotasi, NxR)<br/>
+          Kolom I–K: Roling 2 / Rendahan (Norma, Rotasi, NxR)<br/>
+          <em style="color:var(--text-3)">Baris header (1–4) akan dilewati otomatis.</em>
+        </p>
+      </div>
+      <div style="margin-top:12px;display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="importReplace" style="accent-color:var(--accent);width:16px;height:16px" />
+        <label for="importReplace" style="font-size:13px;color:var(--text-2);cursor:pointer">
+          Ganti semua data yang ada (jika tidak, data akan ditambahkan)
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeImportModal()">Batal</button>
+      <button class="btn btn-primary" id="importConfirmBtn" onclick="confirmImport()" disabled>📥 Import Data</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ========== DATA STORE ==========
+let masterData = [];
+let filteredData = [];
+let currentPage = 1;
+let editingId = null;
+let deleteTargetId = null;
+let pendingImportData = [];
+const STORAGE_KEY = 'sawit_master_norma_v2';
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadFromStorage();
+  if (masterData.length === 0) seedDefaultData();
+  updateFilterDropdown();
+  applyFilter();
+  updateStats();
+  setupDragDrop();
+});
+
+// ========== SEED DATA ==========
+function seedDefaultData() {
+  const raw = [
+    ['TM-1','CW - Manual',1.8,1,1.8,2,1,2,2.2,1,2.2],
+    ['TM-1','CW - Chemist',0.35,3,1.05,0.35,3,1.05,0.35,3,1.05],
+    ['TM-1','Rawat Path - Chemist',0.0675,4,0.27,0.075,4,0.3,0.0825,4,0.33],
+    ['TM-1','Rawat TPH - Chemist',0.0621,4,0.2485,0.0683,4,0.2734,0.0746,4,0.2982],
+    ['TM-1','Weeding (Dak) - Manual',1.35,1,1.35,1.45,1,1.45,1.6,1,1.6],
+    ['TM-1','Weeding - Chemist',0.45,3,1.35,0.45,3,1.35,0.45,3,1.35],
+    ['TM-1','Wipping Lalang',0,0,0,0,0,0,0,0,0],
+    ['TM-1','Rawat/Cuci Flatbat',0.207,2,0.414,0.2277,2,0.4554,0.2484,2,0.4968],
+    ['TM-1','Pengaliran Land Aplikasi',0.63,3,1.89,0.693,3,2.079,0.756,3,2.268],
+    ['TM-1','Pruning',0.33,12,3.96,0.4,12,4.8,0.4,12,4.8],
+    ['TM-1','Pemupukan - Manual',1.1818,2,2.3636,1.3131,2,2.6262,1.4444,2,2.8889],
+    ['TM-1','Pemupukan - Mekanis',0.412,2,0.8239,0.412,2,0.8239,0.412,2,0.8239],
+    ['TM-1','Tkks - Manual',8,1,8,9,1,9,10,1,10],
+    ['TM-1','Tkks - Mekanis WK',6.25,1,6.25,6.25,1,6.25,6.25,1,6.25],
+    ['TM-1','Tkks - Mekanis GB',3,1,3,3,1,3,3,1,3],
+    ['TM-1','Tkks - Mekanis QT',5.5,1,5.5,5.5,1,5.5,5.5,1,5.5],
+    ['TM-1','Rawat Infrastruktur Dalam Blok',0.063,12,0.756,0.0693,12,0.8316,0.0756,12,0.9072],
+    ['TM-1','Sensus Produksi',0.0333,3,0.0999,0.0366,3,0.1099,0.04,3,0.1199],
+    ['TM-1','Sensus Jumlah Pokok',0.2,0.5,0.1,0.2,0.5,0.1,0.2,0.5,0.1],
+    ['TM-1','Rawat HPT',0.12,4,0.48,0.132,4,0.528,0.144,4,0.576],
+    ['TM-1','LSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TM-1','SSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TM-2','CW - Manual',1.8,1,1.8,2,1,2,2.2,1,2.2],
+    ['TM-2','CW - Chemist',0.25,2,0.5,0.25,2,0.5,0.25,2,0.5],
+    ['TM-2','Rawat Path - Chemist',0.0675,3,0.2025,0.075,3,0.225,0.0825,3,0.2475],
+    ['TM-2','Weeding (Dak) - Manual',1.35,1,1.35,1.45,1,1.45,1.6,1,1.6],
+    ['TM-2','Weeding - Chemist',0.35,2,0.7,0.35,2,0.7,0.35,2,0.7],
+    ['TM-2','Rawat/Cuci Flatbat',0.207,2,0.414,0.2277,2,0.4554,0.2484,2,0.4968],
+    ['TM-2','Pengaliran Land Aplikasi',0.63,3,1.89,0.693,3,2.079,0.756,3,2.268],
+    ['TM-2','Pruning',0.33,10,3.3,0.4,10,4,0.4,10,4],
+    ['TM-2','Pemupukan - Manual',1.1818,2,2.3636,1.3131,2,2.6262,1.4444,2,2.8889],
+    ['TM-2','Pemupukan - Mekanis',0.412,2,0.8239,0.412,2,0.8239,0.412,2,0.8239],
+    ['TM-2','Tkks - Manual',8,1,8,9,1,9,10,1,10],
+    ['TM-2','Rawat Infrastruktur Dalam Blok',0.063,12,0.756,0.0693,12,0.8316,0.0756,12,0.9072],
+    ['TM-2','LSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TM-2','SSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TM3-5','CW - Manual',1.8,1,1.8,2,1,2,2.2,1,2.2],
+    ['TM3-5','CW - Chemist',0.2,2,0.4,0.2,2,0.4,0.2,2,0.4],
+    ['TM3-5','Rawat Path - Chemist',0.0675,3,0.2025,0.075,3,0.225,0.0825,3,0.2475],
+    ['TM3-5','Weeding (Dak) - Manual',0.55,1,0.55,0.6,1,0.6,0.65,1,0.65],
+    ['TM3-5','Weeding - Chemist',0.3,2,0.6,0.3,2,0.6,0.3,2,0.6],
+    ['TM3-5','Pruning',0.33,12,3.96,0.4,12,4.8,0.4,12,4.8],
+    ['TM3-5','Pemupukan - Manual',1.1818,2,2.3636,1.3131,2,2.6262,1.4444,2,2.8889],
+    ['TM3-5','LSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TM3-5','SSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TM6-10','CW - Manual',1.8,1,1.8,2,1,2,2.2,1,2.2],
+    ['TM6-10','CW - Chemist',0.2,2,0.4,0.2,2,0.4,0.2,2,0.4],
+    ['TM6-10','Rawat Path - Chemist',0.0675,3,0.2025,0.075,3,0.225,0.0825,3,0.2475],
+    ['TM6-10','Weeding (Dak) - Manual',0.55,1,0.55,0.6,1,0.6,0.65,1,0.65],
+    ['TM6-10','Weeding - Chemist',0.28,2,0.56,0.28,2,0.56,0.28,2,0.56],
+    ['TM6-10','Pruning',0.33,12,3.96,0.4,12,4.8,0.4,12,4.8],
+    ['TM6-10','Pemupukan - Manual',1.1818,2,2.3636,1.3131,2,2.6262,1.4444,2,2.8889],
+    ['TM6-10','LSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TM6-10','SSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TM11-17','CW - Manual',1.8,1,1.8,2,1,2,2.2,1,2.2],
+    ['TM11-17','CW - Chemist',0.2,2,0.4,0.2,2,0.4,0.2,2,0.4],
+    ['TM11-17','Rawat Path - Chemist',0.0675,3,0.2025,0.075,3,0.225,0.0825,3,0.2475],
+    ['TM11-17','Weeding (Dak) - Manual',0.5,1,0.5,0.55,1,0.55,0.6,1,0.6],
+    ['TM11-17','Weeding - Chemist',0.26,2,0.52,0.26,2,0.52,0.26,2,0.52],
+    ['TM11-17','Pruning',0.33,12,3.96,0.4,12,4.8,0.4,12,4.8],
+    ['TM11-17','Pemupukan - Manual',1.1818,2,2.3636,1.3131,2,2.6262,1.4444,2,2.8889],
+    ['TM11-17','LSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TM11-17','SSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TM TUA','CW - Manual',1.8,1,1.8,2,1,2,2.2,1,2.2],
+    ['TM TUA','CW - Chemist',0.2,2,0.4,0.2,2,0.4,0.2,3,0.6],
+    ['TM TUA','Rawat Path - Chemist',0.0675,3,0.2025,0.075,3,0.225,0.0825,3,0.2475],
+    ['TM TUA','Weeding (Dak) - Manual',0.5,1,0.5,0.55,1,0.55,0.6,1,0.6],
+    ['TM TUA','Weeding - Chemist',0.26,2,0.52,0.26,2,0.52,0.26,2,0.52],
+    ['TM TUA','Pruning',0.33,12,3.96,0.4,12,4.8,0.4,12,4.8],
+    ['TM TUA','Pemupukan - Manual',1.1818,2,2.3636,1.3131,2,2.6262,1.4444,2,2.8889],
+    ['TM TUA','Pemupukan - Mekanis',0.412,2,0.8239,0.412,2,0.8239,0.412,2,0.8239],
+    ['TM TUA','Tkks - Manual',8,1,8,9,1,9,10,1,10],
+    ['TM TUA','Tkks - Mekanis WK',6.25,1,6.25,6.25,1,6.25,6.25,1,6.25],
+    ['TM TUA','Tkks - Mekanis GB',3,1,3,3,1,3,3,1,3],
+    ['TM TUA','Tkks - Mekanis QT',5.5,1,5.5,5.5,1,5.5,5.5,1,5.5],
+    ['TM TUA','Rawat Infrastruktur Dalam Blok',0.063,12,0.756,0.0693,12,0.8316,0.0756,12,0.9072],
+    ['TM TUA','Sensus Produksi',0.0333,3,0.0999,0.0366,3,0.1099,0.04,3,0.1199],
+    ['TM TUA','Sensus Jumlah Pokok',0.2,0.5,0.1,0.2,0.5,0.1,0.2,0.5,0.1],
+    ['TM TUA','Rawat HPT',0.12,4,0.48,0.132,4,0.528,0.144,4,0.576],
+    ['TM TUA','LSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TM TUA','SSU',0.05,1,0.05,0.05,1,0.05,0.05,1,0.05],
+    ['TBM 1','CW - Manual',1.19,7,8.33,1.31,7,9.17,1.44,7,10.08],
+    ['TBM 1','Weeding - Manual',0.45,6,2.7,0.5,6,3,0.55,6,3.3],
+    ['TBM 1','Path chemist',0.3,6,1.8,0.33,6,1.98,0.33,6,1.98],
+    ['TBM 1','Pasar seribu chemist',0.01,6,0.06,0.01,6,0.06,0.01,6,0.06],
+    ['TBM 1','Sisip Palma',0.6,2,1.2,0.63,2,1.26,0.69,2,1.38],
+    ['TBM 1','Sensus Pokok',0.21,2,0.42,0.23,2,0.46,0.25,2,0.5],
+    ['TBM 1','Konsolidasi',0.13,5,0.65,0.14,5,0.7,0.15,5,0.75],
+    ['TBM 1','CW - Chemis',0.33,5,1.65,0.34,5,1.7,0.36,5,1.8],
+    ['TBM 1','Wipping Lalang',0.1,9,0.9,0.1,9,0.9,0.12,9,1.08],
+    ['TBM 1','Kastrasi',0.19,18,3.42,0.2,18,3.6,0.22,18,3.96],
+    ['TBM 1','Pemupukan',0.33,10,3.3,0.31,10,3.1,0.4,10,4],
+    ['TBM 1','Aplikasi TKKS',5,1,5,5.25,1,5.25,5.75,1,5.75],
+    ['TBM 1','Rutin HPT',0.25,4,1,0.25,4,1,0.25,4,1],
+    ['TBM 1','Tanam Tanmat',0.08,4,0.32,0.08,4,0.32,0.08,4,0.32],
+    ['TBM 1','Rawat Infrastruktur',0.06,12,0.72,0.06,12,0.72,0.07,12,0.84],
+    ['TBM 1','Pengukuran Pelepah',0.04,4,0.16,0.04,4,0.16,0.05,4,0.2],
+    ['TBM 2','CW - Manual',1.31,4,5.24,1.58,4,6.32,1.73,4,6.92],
+    ['TBM 2','Weeding - Manual',0.5,4,2,0.53,4,2.12,0.58,4,2.32],
+    ['TBM 2','Path chemist',0.3,6,1.8,0.33,6,1.98,0.36,6,2.16],
+    ['TBM 2','Pasar seribu chemist',0.01,6,0.06,0.01,6,0.06,0.01,6,0.06],
+    ['TBM 2','TPH Chemist',0.01,6,0.06,0.01,6,0.06,0.01,6,0.06],
+    ['TBM 2','Sisip Palma',0.3,2,0.6,0.32,2,0.64,0.35,2,0.7],
+    ['TBM 2','Sensus Pokok',0.21,2,0.42,0.23,2,0.46,0.25,2,0.5],
+    ['TBM 2','Konsolidasi',0.13,1,0.13,0.14,1,0.14,0.15,1,0.15],
+    ['TBM 2','CW - Chemis',0.5,6,3,0.53,6,3.18,0.58,6,3.48],
+    ['TBM 2','Wipping Lalang',0.2,4,0.8,0.19,4,0.76,0.23,4,0.92],
+    ['TBM 2','Kastrasi',0.19,18,3.42,0.19,18,3.42,0.22,18,3.96],
+    ['TBM 2','Pemupukan',0.33,12,3.96,0.35,12,4.2,0.4,12,4.8],
+    ['TBM 2','Aplikasi TKKS',8,1,8,8.4,1,8.4,8.82,1,8.82],
+    ['TBM 2','Rutin HPT',0.15,4,0.6,0.15,4,0.6,0.15,4,0.6],
+    ['TBM 2','Tanam Tanmat',0.08,4,0.32,0.08,4,0.32,0.08,4,0.32],
+    ['TBM 2','Rawat Infrastruktur',0.06,12,0.72,0.06,12,0.72,0.07,12,0.84],
+    ['TBM 2','Pengukuran Pelepah',0.05,3,0.15,0.06,3,0.18,0.06,3,0.18],
+    ['TBM 2','TPH - Manual',0.35,1,0.35,0.37,1,0.37,0.4,1,0.4],
+    ['TBM 2','Sanitasi',2,1,2,2,1,2,2.3,1,2.3],
+    ['TBM 2','Panen Perdana',0.33,36,11.88,0.33,36,11.88,0.33,36,11.88],
+    ['TBM 3','CW - Manual',1.7,3,5.1,1.79,3,5.37,1.96,3,5.88],
+    ['TBM 3','Weeding - Manual',0.5,3,1.5,0.53,3,1.59,0.58,3,1.74],
+    ['TBM 3','Path chemist',0.3,6,1.8,0.33,6,1.98,0.33,6,1.98],
+    ['TBM 3','Pasar seribu chemist',0.01,6,0.06,0.01,6,0.06,0.01,6,0.06],
+    ['TBM 3','TPH Chemist',0.01,6,0.06,0.01,6,0.06,0.01,6,0.06],
+    ['TBM 3','Sisip Palma',0.3,2,0.6,0.32,2,0.64,0.35,2,0.7],
+    ['TBM 3','Sensus Pokok',0.21,2,0.42,0.23,2,0.46,0.25,2,0.5],
+    ['TBM 3','CW - Chemis',0.5,6,3,0.53,6,3.18,0.58,6,3.48],
+    ['TBM 3','Wipping Lalang',0.2,6,1.2,0.2,6,1.2,0.23,6,1.38],
+    ['TBM 3','Pemupukan',0.38,12,4.56,0.44,12,5.28,0.48,12,5.76],
+    ['TBM 3','Rutin HPT',0.03,4,0.12,0.03,4,0.12,0.03,4,0.12],
+    ['TBM 3','Tanam Tanmat',0.05,4,0.2,0.05,4,0.2,0.05,4,0.2],
+    ['TBM 3','Rawat Infrastruktur',0.06,12,0.72,0.06,12,0.72,0.07,12,0.84],
+    ['TBM 3','TPH - Manual',0.13,3,0.39,0.14,3,0.42,0.15,3,0.45],
+    ['TBM 3','Timbang BJR',0.07,4,0.28,0.07,4,0.28,0.08,4,0.32],
+    ['TBM 3','Initial Pruning',2.2,1,2.2,2.2,1,2.2,2.2,1,2.2],
+  ];
+  masterData = raw.map((r,i) => ({
+    id: Date.now() + i,
+    status_umur: r[0], item_kerja: r[1],
+    datar_norma: r[2], datar_rotasi: r[3], datar_nxr: r[4],
+    roling1_norma: r[5], roling1_rotasi: r[6], roling1_nxr: r[7],
+    roling2_norma: r[8], roling2_rotasi: r[9], roling2_nxr: r[10],
+  }));
+  saveToStorage();
+}
+
+// ========== STORAGE ==========
+function saveToStorage() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(masterData)); } catch(e){}
+  const d = new Date();
+  document.getElementById('statDate').textContent =
+    d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) + ' ' +
+    d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+}
+function loadFromStorage() {
+  try { const s = localStorage.getItem(STORAGE_KEY); if(s) masterData = JSON.parse(s); } catch(e){ masterData=[]; }
+}
+
+// ========== FILTER ==========
+function applyFilter() {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const s = document.getElementById('filterStatus').value;
+  filteredData = masterData.filter(r => {
+    const matchQ = !q || (r.item_kerja||'').toLowerCase().includes(q) || (r.status_umur||'').toLowerCase().includes(q);
+    const matchS = !s || r.status_umur === s;
+    return matchQ && matchS;
+  });
+  currentPage = 1;
+  renderTable();
+  updateStats();
+}
+
+function updateFilterDropdown() {
+  const sel = document.getElementById('filterStatus');
+  const cur = sel.value;
+  const statuses = [...new Set(masterData.map(r=>r.status_umur).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Semua Status</option>' +
+    statuses.map(s => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
+}
+
+// ========== RENDER ==========
+function renderTable() {
+  const perPage = parseInt(document.getElementById('filterRows').value)||0;
+  const total = filteredData.length;
+  const totalPages = perPage ? Math.ceil(total/perPage) : 1;
+  const start = perPage ? (currentPage-1)*perPage : 0;
+  const end   = perPage ? Math.min(start+perPage, total) : total;
+  const page  = filteredData.slice(start, end);
+  const tbody = document.getElementById('tableBody');
+
+  if (!page.length) {
+    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">
+      <div class="icon">📭</div><h3>Tidak ada data</h3>
+      <p>Coba ubah filter atau tambahkan data baru</p>
+    </div></td></tr>`;
+    document.getElementById('paginationInfo').textContent = 'Tidak ada data';
+    document.getElementById('paginationBtns').innerHTML = '';
+    return;
+  }
+
+  const fmt = v => (v===null||v===undefined||v==='') ? '<span style="color:var(--text-3)">–</span>'
+    : `<span class="num-cell">${typeof v==='number'?numFmt(v):v}</span>`;
+  const fmtA = v => (v===null||v===undefined||v==='') ? '<span style="color:var(--text-3)">–</span>'
+    : `<span class="num-cell accent">${typeof v==='number'?numFmt(v):v}</span>`;
+
+  tbody.innerHTML = page.map(row => {
+    const bc = row.status_umur?.startsWith('TBM') ? 'badge-tbm'
+             : row.status_umur==='TM TUA' ? 'badge-tmtua' : 'badge-tm';
+    return `<tr>
+      <td class="left"><span class="badge-status ${bc}">${row.status_umur||'–'}</span></td>
+      <td class="left" style="color:var(--text-1);font-weight:500;max-width:220px">${row.item_kerja||'–'}</td>
+      <td>${fmt(row.datar_norma)}</td><td>${fmt(row.datar_rotasi)}</td><td>${fmtA(row.datar_nxr)}</td>
+      <td>${fmt(row.roling1_norma)}</td><td>${fmt(row.roling1_rotasi)}</td><td>${fmtA(row.roling1_nxr)}</td>
+      <td>${fmt(row.roling2_norma)}</td><td>${fmt(row.roling2_rotasi)}</td><td>${fmtA(row.roling2_nxr)}</td>
+      <td><div style="display:flex;gap:6px;justify-content:center">
+        <button class="btn btn-edit-sm" onclick="openEdit(${row.id})" title="Edit">✏️ Edit</button>
+        <button class="btn btn-danger-sm" onclick="openDelete(${row.id})" title="Hapus">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('paginationInfo').textContent =
+    `Menampilkan ${start+1}–${end} dari ${total} data`;
+
+  const pb = document.getElementById('paginationBtns');
+  if (!perPage || totalPages<=1) { pb.innerHTML=''; return; }
+  let btns = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
+  pageRange(currentPage, totalPages).forEach(p => {
+    btns += p==='...'
+      ? `<button class="page-btn" disabled>…</button>`
+      : `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  });
+  btns += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
+  pb.innerHTML = btns;
+}
+
+function numFmt(v) {
+  if (Number.isInteger(v)) return v.toString();
+  return parseFloat(v.toFixed(4)).toString();
+}
+function pageRange(cur, total) {
+  if (total<=7) return Array.from({length:total},(_,i)=>i+1);
+  const p=[];
+  if(cur<=4){for(let i=1;i<=5;i++)p.push(i);p.push('...');p.push(total);}
+  else if(cur>=total-3){p.push(1);p.push('...');for(let i=total-4;i<=total;i++)p.push(i);}
+  else{p.push(1);p.push('...');for(let i=cur-1;i<=cur+1;i++)p.push(i);p.push('...');p.push(total);}
+  return p;
+}
+function goPage(p) {
+  const perPage = parseInt(document.getElementById('filterRows').value)||0;
+  const total = filteredData.length;
+  const totalPages = perPage ? Math.ceil(total/perPage) : 1;
+  if(p<1||p>totalPages) return;
+  currentPage=p; renderTable();
+}
+
+// ========== STATS ==========
+function updateStats() {
+  document.getElementById('statTotal').textContent = masterData.length;
+  document.getElementById('statStatus').textContent = new Set(masterData.map(r=>r.status_umur).filter(Boolean)).size;
+  document.getElementById('statItems').textContent = new Set(masterData.map(r=>r.item_kerja).filter(Boolean)).size;
+}
+
+// ========== CRUD: ADD/EDIT ==========
+function openAdd() {
+  editingId=null;
+  document.getElementById('formModalTitle').textContent='➕ Tambah Data Norma';
+  document.getElementById('formSubmitBtn').textContent='💾 Simpan';
+  ['fStatus','fItem','fDatarNorma','fDatarRotasi','fRoling1Norma','fRoling1Rotasi','fRoling2Norma','fRoling2Rotasi'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el.tagName==='SELECT') el.value=''; else el.value='';
+  });
+  document.getElementById('formModal').classList.add('open');
+}
+
+function openEdit(id) {
+  const row = masterData.find(r=>r.id===id);
+  if(!row) return;
+  editingId=id;
+  document.getElementById('formModalTitle').textContent='✏️ Edit Data Norma';
+  document.getElementById('formSubmitBtn').textContent='💾 Update';
+  document.getElementById('fStatus').value = row.status_umur||'';
+  document.getElementById('fItem').value = row.item_kerja||'';
+  document.getElementById('fDatarNorma').value = row.datar_norma??'';
+  document.getElementById('fDatarRotasi').value = row.datar_rotasi??'';
+  document.getElementById('fRoling1Norma').value = row.roling1_norma??'';
+  document.getElementById('fRoling1Rotasi').value = row.roling1_rotasi??'';
+  document.getElementById('fRoling2Norma').value = row.roling2_norma??'';
+  document.getElementById('fRoling2Rotasi').value = row.roling2_rotasi??'';
+  document.getElementById('formModal').classList.add('open');
+}
+
+function closeFormModal() {
+  document.getElementById('formModal').classList.remove('open');
+  editingId=null;
+}
+
+function submitForm() {
+  const status = document.getElementById('fStatus').value.trim();
+  const item   = document.getElementById('fItem').value.trim();
+  if(!status) { showToast('error','Status Umur Tanaman wajib dipilih!'); return; }
+  if(!item)   { showToast('error','Item Kerja wajib diisi!'); return; }
+
+  const dN  = parseFloat(document.getElementById('fDatarNorma').value)||0;
+  const dR  = parseFloat(document.getElementById('fDatarRotasi').value)||0;
+  const r1N = parseFloat(document.getElementById('fRoling1Norma').value)||0;
+  const r1R = parseFloat(document.getElementById('fRoling1Rotasi').value)||0;
+  const r2N = parseFloat(document.getElementById('fRoling2Norma').value)||0;
+  const r2R = parseFloat(document.getElementById('fRoling2Rotasi').value)||0;
+
+  const obj = {
+    status_umur:status, item_kerja:item,
+    datar_norma:dN, datar_rotasi:dR, datar_nxr: Math.round(dN*dR*100000)/100000,
+    roling1_norma:r1N, roling1_rotasi:r1R, roling1_nxr: Math.round(r1N*r1R*100000)/100000,
+    roling2_norma:r2N, roling2_rotasi:r2R, roling2_nxr: Math.round(r2N*r2R*100000)/100000,
+  };
+
+  if(editingId) {
+    const idx = masterData.findIndex(r=>r.id===editingId);
+    if(idx>=0) masterData[idx]={...masterData[idx],...obj};
+    showToast('success','Data berhasil diperbarui ✓');
+  } else {
+    masterData.push({id:Date.now(),...obj});
+    showToast('success','Data berhasil ditambahkan ✓');
+  }
+  saveToStorage(); updateFilterDropdown(); closeFormModal(); applyFilter();
+}
+
+// ========== CRUD: DELETE ==========
+function openDelete(id) {
+  const row = masterData.find(r=>r.id===id);
+  if(!row) return;
+  deleteTargetId=id;
+  document.getElementById('deleteItemName').textContent=`${row.status_umur} – ${row.item_kerja}`;
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); deleteTargetId=null; }
+function confirmDelete() {
+  if(!deleteTargetId) return;
+  masterData = masterData.filter(r=>r.id!==deleteTargetId);
+  saveToStorage(); updateFilterDropdown(); closeDeleteModal(); applyFilter();
+  showToast('info','Data berhasil dihapus');
+}
+
+// ========== EXPORT ==========
+function exportExcel() {
+  if(!masterData.length) { showToast('error','Tidak ada data untuk diekspor'); return; }
+  const wb = XLSX.utils.book_new();
+  const rows = [
+    ['Status Umur Tanaman','Item Kerja','Topografi','','','','','','','',''],
+    ['','','Datar','','','Roling 1','','','Roling 2 / Rendahan','',''],
+    ['','','Norma (Hk/Ha)','Rotasi Kerja','N x R (Hk/Ha)','Norma (Hk/Ha)','Rotasi Kerja','N x R (Hk/Ha)','Norma (Hk/Ha)','Rotasi Kerja','N x R (Hk/Ha)'],
+    ...masterData.map(r=>[
+      r.status_umur,r.item_kerja,
+      r.datar_norma,r.datar_rotasi,r.datar_nxr,
+      r.roling1_norma,r.roling1_rotasi,r.roling1_nxr,
+      r.roling2_norma,r.roling2_rotasi,r.roling2_nxr
+    ])
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:18},{wch:30},{wch:12},{wch:10},{wch:12},{wch:12},{wch:10},{wch:12},{wch:12},{wch:10},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Master Norma');
+  const fname = `master_norma_sawit_${new Date().toISOString().slice(0,10)}.xlsx`;
+  XLSX.writeFile(wb, fname);
+  showToast('success',`File "${fname}" berhasil diunduh`);
+}
+
+// ========== IMPORT ==========
+function openImport() {
+  document.getElementById('importFile').value='';
+  document.getElementById('importPreview').style.display='none';
+  document.getElementById('importConfirmBtn').disabled=true;
+  pendingImportData=[];
+  document.getElementById('importModal').classList.add('open');
+}
+function closeImportModal() { document.getElementById('importModal').classList.remove('open'); }
+function setupDragDrop() {
+  const z=document.getElementById('importZone');
+  z.addEventListener('dragover',e=>{e.preventDefault();z.classList.add('dragover');});
+  z.addEventListener('dragleave',()=>z.classList.remove('dragover'));
+  z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)processImportFile(f);});
+}
+function handleImportFile(e) { const f=e.target.files[0]; if(f) processImportFile(f); }
+function processImportFile(file) {
+  const preview=document.getElementById('importPreview');
+  const progress=document.getElementById('importProgress');
+  const fileInfo=document.getElementById('importFileInfo');
+  const rowCount=document.getElementById('importRowCount');
+  fileInfo.textContent=`📄 ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+  preview.style.display='block'; progress.style.width='30%';
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try {
+      progress.style.width='70%';
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rawRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+      let startRow=0;
+      for(let i=0;i<rawRows.length;i++){
+        const r=rawRows[i];
+        if(r[0]&&!['Status Umur Tanaman',null,undefined,''].includes(r[0])&&(typeof r[2]==='number'||r[2]===null)){
+          startRow=i; break;
+        }
+      }
+      pendingImportData=rawRows.slice(startRow)
+        .filter(r=>r[0]&&r[1])
+        .map((r,i)=>({
+          id:Date.now()+i,
+          status_umur:String(r[0]).trim(), item_kerja:String(r[1]).trim(),
+          datar_norma:r[2]??null, datar_rotasi:r[3]??null, datar_nxr:r[4]??null,
+          roling1_norma:r[5]??null, roling1_rotasi:r[6]??null, roling1_nxr:r[7]??null,
+          roling2_norma:r[8]??null, roling2_rotasi:r[9]??null, roling2_nxr:r[10]??null,
+        }));
+      progress.style.width='100%';
+      if(pendingImportData.length===0){
+        rowCount.style.color='var(--danger)'; rowCount.textContent='⚠️ Tidak ada data valid ditemukan';
+        document.getElementById('importConfirmBtn').disabled=true;
+      } else {
+        rowCount.style.color='var(--accent)';
+        rowCount.textContent=`✓ ${pendingImportData.length} baris data terdeteksi`;
+        document.getElementById('importConfirmBtn').disabled=false;
+      }
+    } catch(err) {
+      rowCount.textContent='❌ Gagal membaca: '+err.message;
+      rowCount.style.color='var(--danger)';
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+function confirmImport() {
+  if(!pendingImportData.length) return;
+  if(document.getElementById('importReplace').checked) {
+    masterData=pendingImportData;
+  } else {
+    pendingImportData.forEach((r,i)=>{ r.id=Date.now()+masterData.length+i; masterData.push(r); });
+  }
+  saveToStorage(); updateFilterDropdown(); closeImportModal(); applyFilter();
+  showToast('success',`✓ Berhasil import ${pendingImportData.length} data`);
+  pendingImportData=[];
+}
+
+// ========== TOAST ==========
+function showToast(type,msg) {
+  const icons={success:'✅',error:'❌',info:'ℹ️'};
+  const c=document.getElementById('toastContainer');
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<span class="toast-icon">${icons[type]||'•'}</span><span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(()=>t.remove(),400);},3500);
+}
+
+// Close on overlay click
+['formModal','deleteModal','importModal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){
+    if(e.target===this) this.classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
