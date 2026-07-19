@@ -825,7 +825,7 @@
   @endphp
   <div class="header">
     <div class="title-block">
-      <h1>🧭 ANOMALI — Sistem Deteksi Dini Cost &amp; Norma <span class="live-badge"><span class="dot"></span>LIVE
+      <h1>🧭 Sistem Deteksi Dini Cost &amp; Norma <span class="live-badge"><span class="dot"></span>LIVE
           MONITORING</span></h1>
       <p>Pemantauan realisasi cost dan norma kerja secara real-time, deteksi anomali otomatis, serta klarifikasi
         penyebab over budget untuk mendukung pengambilan keputusan Kepala Kebun &amp; Asisten Afdeling.</p>
@@ -844,7 +844,7 @@
     </div>
   </div>
 
-  <div class="hint">👉 Semua kartu, langkah alur, dan alert di bawah ini bisa diklik untuk melihat detail data (dummy).
+  <div class="hint">👉 Semua kartu, langkah alur, dan alert di bawah ini bisa diklik untuk melihat detail data .
   </div>
 
 
@@ -986,77 +986,77 @@
     const alerts = [
       @if(isset($rawatData) && $rawatData->count() > 0)
         @foreach($rawatData as $index => $rawat)
-          @php
-            $mandays_shi = (float) ($rawat->mandays_shi ?? 0);
-            $produksi_shi = (float) ($rawat->produksi_shi ?? 0);
-            $realisasi = 0;
-            if ($produksi_shi > 0) {
-              $realisasi = $mandays_shi / $produksi_shi;
-            }
-            $master = isset($masterNorma) ? $masterNorma->firstWhere('item_kerja', $rawat->jobdesc) : null;
-            $standar = $master && $master->datar_norma ? (float) $master->datar_norma : 0;
+              @php
+                $mandays_shi = (float) ($rawat->mandays_shi ?? 0);
+                $produksi_shi = (float) ($rawat->produksi_shi ?? 0);
+                $realisasi = 0;
+                if ($produksi_shi > 0) {
+                  $realisasi = $mandays_shi / $produksi_shi;
+                }
+                $master = isset($masterNorma) ? $masterNorma->firstWhere('item_kerja', $rawat->jobdesc) : null;
+                $standar = $master && $master->datar_norma ? (float) $master->datar_norma : 0;
 
-            $fluktuasi = 0;
-            if ($standar > 0) {
-              $fluktuasi = (($realisasi - $standar) / $standar) * 100;
-            }
+                $fluktuasi = 0;
+                if ($standar > 0) {
+                  $fluktuasi = (($realisasi - $standar) / $standar) * 100;
+                }
 
-            $persen = 0;
-            if ($standar > 0) {
-              $persen = round(($realisasi / $standar) * 100, 1);
-            }
+                $persen = 0;
+                if ($standar > 0) {
+                  $persen = round(($realisasi / $standar) * 100, 1);
+                }
 
-            if (empty($rawat->jobdesc) && empty($rawat->tdate)) {
-              $statusText = 'Tidak Ada Data';
-              $color = '#9ca3af'; // abu-abu
-              $icon = '⚪';
-              $cls = 'grey';
-            } else {
-              if ($standar == 0) {
-                $statusText = 'Tanpa Status';
-                $color = '#9ca3af';
-                $icon = '⚪';
-                $cls = 'grey';
-              } elseif ($persen <= 100) {
-                $statusText = 'Aman';
-                $color = '#22c55e'; // hijau
-                $icon = '🟢';
-                $cls = 'ok';
-              } elseif ($persen <= 105) {
-                $statusText = 'Netral / Waspada';
-                $color = '#f59e0b'; // orange
-                $icon = '🟠';
-                $cls = 'warn';
-              } else {
-                $statusText = 'Over Normal';
-                $color = '#ef4444'; // merah
-                $icon = '🔴';
-                $cls = '';
-              }
+                if (empty($rawat->jobdesc) && empty($rawat->tdate)) {
+                  $statusText = 'Tidak Ada Data';
+                  $color = '#9ca3af'; // abu-abu
+                  $icon = '⚪';
+                  $cls = 'grey';
+                } else {
+                  if ($standar == 0) {
+                    $statusText = 'Tanpa Status';
+                    $color = '#9ca3af';
+                    $icon = '⚪';
+                    $cls = 'grey';
+                  } elseif ($persen <= 100) {
+                    $statusText = 'Aman';
+                    $color = '#22c55e'; // hijau
+                    $icon = '🟢';
+                    $cls = 'ok';
+                  } elseif ($persen <= 105) {
+                    $statusText = 'Netral / Waspada';
+                    $color = '#f59e0b'; // orange
+                    $icon = '🟠';
+                    $cls = 'warn';
+                  } else {
+                    $statusText = 'Over Normal';
+                    $color = '#ef4444'; // merah
+                    $icon = '🔴';
+                    $cls = '';
+                  }
+                }
+                $tdate = $rawat->tdate ? \Carbon\Carbon::parse($rawat->tdate)->translatedFormat('d M Y') : '-';
+              @endphp
+              {
+            id: {{ $index + 1 }},
+            icon: "{{ $icon }}",
+            cls: "{{ $cls }}",
+            title: {!! json_encode("Afdeling " . ($rawat->afdcode ?? '-') . " — " . ($rawat->location ?? '-')) !!},
+            desc: {!! json_encode(($rawat->jobdesc ?? 'Data Pekerjaan') . " <br><span style='color:" . $color . "; font-weight:600;'>Status: " . $statusText . " (" . $persen . "%)</span>") !!},
+            time: {!! json_encode($tdate) !!},
+            detail: {
+              status: {!! json_encode($statusText) !!},
+              statusColor: "{{ $color }}",
+              persen: {{ $persen }},
+              pic: {!! json_encode("Asisten Afdeling " . ($rawat->afdcode ?? '-')) !!},
+              jobdesc: {!! json_encode($rawat->jobdesc ?? '-') !!},
+              mandays_shi: "{{ number_format($mandays_shi, 4, '.', '') }}",
+              produksi_shi: "{{ number_format($produksi_shi, 4, '.', '') }}",
+              realisasi_val: "{{ number_format($realisasi, 4, '.', '') }}",
+              standar_val: "{{ number_format($standar, 4, '.', '') }}",
+              fluktuasi_val: "{{ number_format($fluktuasi, 2, '.', '') }}",
+              catatan: "Data terakhir dari sistem ERP."
             }
-            $tdate = $rawat->tdate ? \Carbon\Carbon::parse($rawat->tdate)->translatedFormat('d M Y') : '-';
-          @endphp
-          {
-              id: {{ $index + 1 }},
-              icon: "{{ $icon }}",
-              cls: "{{ $cls }}",
-              title: {!! json_encode("Afdeling " . ($rawat->afdcode ?? '-') . " — " . ($rawat->location ?? '-')) !!},
-              desc: {!! json_encode(($rawat->jobdesc ?? 'Data Pekerjaan') . " <br><span style='color:" . $color . "; font-weight:600;'>Status: " . $statusText . " (" . $persen . "%)</span>") !!},
-              time: {!! json_encode($tdate) !!},
-              detail: {
-                status: {!! json_encode($statusText) !!},
-                statusColor: "{{ $color }}",
-                persen: {{ $persen }},
-                pic: {!! json_encode("Asisten Afdeling " . ($rawat->afdcode ?? '-')) !!},
-                jobdesc: {!! json_encode($rawat->jobdesc ?? '-') !!},
-                mandays_shi: "{{ number_format($mandays_shi, 4, '.', '') }}",
-                produksi_shi: "{{ number_format($produksi_shi, 4, '.', '') }}",
-                realisasi_val: "{{ number_format($realisasi, 4, '.', '') }}",
-                standar_val: "{{ number_format($standar, 4, '.', '') }}",
-                fluktuasi_val: "{{ number_format($fluktuasi, 2, '.', '') }}",
-                catatan: "Data terakhir dari sistem ERP."
-              }
-            }{{ $loop->last ? '' : ',' }}
+          }{{ $loop->last ? '' : ',' }}
         @endforeach
       @else
         {
