@@ -358,7 +358,7 @@
 
 <div class="main-wrap">
   <header class="topbar">
-    <div class="breadcrumb">Home &rsaquo; <span>Master Data Norma</span></div>
+    <div class="breadcrumb">Home &rsaquo; <span>Konfigurasi Telegram</span></div>
     <div class="topbar-right">
       <div class="badge-dot"></div>
       <div style="font-size:12px;color:var(--text-2)">{{ Auth::user()->name ?? 'Admin' }}</div>
@@ -370,556 +370,311 @@
   </header>
 
   <main class="content">
+
     <div class="page-header">
-      <h1>📋 Master Data Norma Kerja</h1>
-      <p>Manajemen norma kerja per topografi untuk monitoring anggaran perkebunan kelapa sawit</p>
+      <h1>⚙️ Konfigurasi Sistem</h1>
+      <p>Pengaturan integrasi pihak ketiga, dan daftar penerima notifikasi Telegram.</p>
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card green">
-        <span class="icon">📋</span>
-        <div class="label">Total Data</div>
-        <div class="value" id="statTotal">0</div>
-        <div class="sub">Item kerja terdaftar</div>
-      </div>
+    @if(session('success'))
+    <div style="background:rgba(56,189,130,0.1); border:1px solid var(--accent); color:var(--accent-l); padding:16px 20px; border-radius:12px; margin-bottom:24px; font-weight:600; display:flex; align-items:center; gap:12px;">
+      <span>✅</span> {{ session('success') }}
+    </div>
+    @endif
+
+    <div class="stats-grid" style="grid-template-columns:repeat(2,1fr);">
       <div class="stat-card blue">
-        <span class="icon">🌱</span>
-        <div class="label">Status Tanaman</div>
-        <div class="value" id="statStatus">0</div>
-        <div class="sub">Kategori umur tanaman</div>
+        <span class="icon">💬</span>
+        <div class="label">Total Penerima</div>
+        <div class="value" id="statTotal">{{ count($telegramUsers) }}</div>
+        <div class="sub">Akun telegram terdaftar</div>
       </div>
-      <div class="stat-card purple">
-        <span class="icon">📝</span>
-        <div class="label">Item Kerja Unik</div>
-        <div class="value" id="statItems">0</div>
-        <div class="sub">Jenis pekerjaan berbeda</div>
-      </div>
-      <div class="stat-card orange">
-        <span class="icon">📊</span>
-        <div class="label">Terakhir Update</div>
-        <div class="value" style="font-size:16px;margin-top:14px" id="statDate">–</div>
-        <div class="sub">Waktu sinkronisasi data</div>
+      <div class="stat-card green">
+        <span class="icon">🤖</span>
+        <div class="label">Status Bot</div>
+        <div class="value" style="font-size:24px; margin-top:10px;">{{ !empty($settings['telegram_bot_token']) ? 'Aktif' : 'Tidak Aktif' }}</div>
+        <div class="sub">Integrasi API Telegram</div>
       </div>
     </div>
 
+    <!-- MAIN CONFIG -->
+    <div class="card" style="background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:24px;">
+      <h3 style="font-size:16px; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+        <span style="color:#0088cc; font-size:20px;">🤖</span> Konfigurasi Token Bot
+      </h3>
+      <form action="{{ route('settings.store') }}" method="POST" style="display:flex; gap:16px; align-items:flex-end;" id="tokenForm">
+        @csrf
+        <div class="form-group" style="flex:1;">
+          <label for="telegram_bot_token" style="margin-bottom:8px; display:block; font-size:12px; font-weight:600; color:var(--text-2); text-transform:uppercase;">Token Bot Telegram (Dari @BotFather)</label>
+          <input type="text" id="telegram_bot_token" name="telegram_bot_token" value="{{ $settings['telegram_bot_token'] ?? '' }}" placeholder="Contoh: 1234567890:ABCdefGHIjklMNOpqrsTUVwxyz..." style="width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:10px; padding:10px 14px; color:var(--text-1); outline:none;" />
+        </div>
+        <button type="submit" id="btnSaveToken" style="background:rgba(255,255,255,0.1); color:#fff; border:1px solid var(--border); border-radius:10px; padding:11px 24px; font-weight:600; cursor:pointer; height:42px;">💾 Simpan Token</button>
+      </form>
+    </div>
+
+    <!-- TABLE CARD -->
     <div class="table-card">
       <div class="toolbar">
         <div class="toolbar-left">
           <div class="search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="searchInput" placeholder="Cari item kerja atau status..." oninput="applyFilter()" />
+            <input type="text" id="searchInput" placeholder="Cari nama atau ID..." oninput="applyFilter()" />
           </div>
-          <select class="filter-select" id="filterStatus" onchange="applyFilter()">
-            <option value="">Semua Status</option>
-          </select>
-          <select class="filter-select" id="filterRows" onchange="applyFilter()">
-            <option value="20">20 baris</option>
-            <option value="50">50 baris</option>
-            <option value="100">100 baris</option>
-            <option value="0">Semua</option>
-          </select>
         </div>
         <div class="toolbar-right">
-          <button class="btn btn-import" onclick="openImport()">📥 Import Excel</button>
-          <a href="{{ route('master.export') }}" class="btn btn-excel" style="text-decoration:none">📥 Export Excel</a>
-          <button class="btn btn-primary" onclick="openAdd()">＋ Tambah Data</button>
+          <button class="btn btn-primary" onclick="openAdd()">＋ Tambah Penerima</button>
         </div>
       </div>
 
       <div class="table-wrap">
-        <table id="masterTable">
+        <table id="userTable">
           <thead>
             <tr>
-              <th class="th-group left" colspan="2">Identifikasi</th>
-              <th class="th-group" colspan="3">🏔️ Datar</th>
-              <th class="th-group" colspan="3">⛰️ Roling 1</th>
-              <th class="th-group" colspan="3">🌊 Roling 2 / Rendahan</th>
-              <th class="th-group">Aksi</th>
-            </tr>
-            <tr>
-              <th class="left" style="min-width:130px">Status Umur</th>
-              <th class="left" style="min-width:200px">Item Kerja</th>
-              <th style="min-width:90px">Norma<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
-              <th style="min-width:80px">Rotasi<br/><small style="font-weight:400;color:var(--text-3)">Kerja</small></th>
-              <th style="min-width:90px">N×R<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
-              <th style="min-width:90px">Norma<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
-              <th style="min-width:80px">Rotasi<br/><small style="font-weight:400;color:var(--text-3)">Kerja</small></th>
-              <th style="min-width:90px">N×R<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
-              <th style="min-width:90px">Norma<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
-              <th style="min-width:80px">Rotasi<br/><small style="font-weight:400;color:var(--text-3)">Kerja</small></th>
-              <th style="min-width:90px">N×R<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
-              <th style="min-width:110px">Aksi</th>
+              <th class="left">Nama Penerima</th>
+              <th class="left">Chat ID Telegram</th>
+              <th style="width:120px;">Aksi</th>
             </tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
       </div>
-
+      
       <div class="pagination-bar">
         <div class="pagination-info" id="paginationInfo">Menampilkan 0 data</div>
         <div class="pagination-btns" id="paginationBtns"></div>
       </div>
     </div>
-  </main>
-</div>
 
-<!-- MODAL: ADD/EDIT -->
-<div class="modal-overlay" id="formModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3 id="formModalTitle">Tambah Data Norma</h3>
-      <button class="modal-close" onclick="closeFormModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Status Umur Tanaman *</label>
-          <select id="fStatus">
-            <option value="">Pilih Status</option>
-            <option value="TM-1">TM-1</option>
-            <option value="TM-2">TM-2</option>
-            <option value="TM3-5">TM3-5</option>
-            <option value="TM6-10">TM6-10</option>
-            <option value="TM11-17">TM11-17</option>
-            <option value="TM TUA">TM TUA</option>
-            <option value="TBM 1">TBM 1</option>
-            <option value="TBM 2">TBM 2</option>
-            <option value="TBM 3">TBM 3</option>
-          </select>
+    <!-- MODAL: ADD/EDIT -->
+    <div class="modal-overlay" id="formModal">
+      <div class="modal" style="max-width:480px">
+        <div class="modal-header">
+          <h3 id="formModalTitle">➕ Tambah Penerima</h3>
+          <button class="modal-close" onclick="closeFormModal()">✕</button>
         </div>
-        <div class="form-group">
-          <label>Item Kerja *</label>
-          <input type="text" id="fItem" placeholder="Contoh: CW - Manual" />
+        <div class="modal-body">
+          <div class="form-group" style="margin-bottom:16px;">
+            <label>Nama Penerima</label>
+            <input type="text" id="fName" placeholder="Contoh: Bpk. Budi" />
+          </div>
+          <div class="form-group">
+            <label>Chat ID Telegram</label>
+            <input type="text" id="fChatId" placeholder="Contoh: 123456789" />
+            <span style="font-size:11px; color:var(--text-3); margin-top:6px; display:block;">Gunakan <a href="https://t.me/userinfobot" target="_blank" style="color:var(--accent);">@userinfobot</a> untuk mengetahui ID Anda. <strong>Penting:</strong> Pastikan penerima sudah memulai obrolan dengan <a href="http://t.me/AnomaliCost_bot" target="_blank" style="color:#4fc3f7;font-weight:600;">@AnomaliCost_bot</a>.</span>
+          </div>
         </div>
-        <div class="form-divider">🏔️ Datar</div>
-        <div class="form-group">
-          <label>Norma (Hk/Ha)</label>
-          <input type="number" id="fDatarNorma" step="0.0001" placeholder="0.0000" />
-        </div>
-        <div class="form-group">
-          <label>Rotasi Kerja</label>
-          <input type="number" id="fDatarRotasi" step="0.5" placeholder="0" />
-        </div>
-        <div class="form-divider">⛰️ Roling 1</div>
-        <div class="form-group">
-          <label>Norma (Hk/Ha)</label>
-          <input type="number" id="fRoling1Norma" step="0.0001" placeholder="0.0000" />
-        </div>
-        <div class="form-group">
-          <label>Rotasi Kerja</label>
-          <input type="number" id="fRoling1Rotasi" step="0.5" placeholder="0" />
-        </div>
-        <div class="form-divider">🌊 Roling 2 / Rendahan</div>
-        <div class="form-group">
-          <label>Norma (Hk/Ha)</label>
-          <input type="number" id="fRoling2Norma" step="0.0001" placeholder="0.0000" />
-        </div>
-        <div class="form-group">
-          <label>Rotasi Kerja</label>
-          <input type="number" id="fRoling2Rotasi" step="0.5" placeholder="0" />
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeFormModal()">Batal</button>
+          <button class="btn btn-primary" onclick="submitForm()" id="formSubmitBtn">💾 Simpan</button>
         </div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeFormModal()">Batal</button>
-      <button class="btn btn-primary" onclick="submitForm()" id="formSubmitBtn">💾 Simpan</button>
-    </div>
-  </div>
-</div>
 
-<!-- MODAL: DELETE -->
-<div class="modal-overlay" id="deleteModal">
-  <div class="modal confirm-modal" style="max-width:440px">
-    <div class="modal-header">
-      <h3>🗑️ Hapus Data</h3>
-      <button class="modal-close" onclick="closeDeleteModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <p style="color:var(--text-2);font-size:14px;line-height:1.8">
-        Apakah Anda yakin ingin menghapus item ini?<br/>
-        <strong id="deleteItemName" style="color:var(--text-1)"></strong><br/><br/>
-        <span style="color:var(--danger);font-size:12.5px">⚠️ Tindakan ini tidak dapat dibatalkan.</span>
-      </p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeDeleteModal()">Batal</button>
-      <button class="btn" style="background:var(--danger);color:#fff" onclick="confirmDelete()" id="deleteSubmitBtn">🗑️ Hapus</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: IMPORT -->
-<div class="modal-overlay" id="importModal">
-  <div class="modal" style="max-width:520px">
-    <div class="modal-header">
-      <h3>📥 Import Data dari Excel</h3>
-      <button class="modal-close" onclick="closeImportModal()">✕</button>
-    </div>
-    <form action="{{ route('master.import') }}" method="POST" enctype="multipart/form-data">
-      @csrf
-      <div class="modal-body">
-        <div style="margin-bottom:15px">
-          <input type="file" id="importFile" name="file" accept=".xlsx,.xls,.csv" required style="width:100%; padding:10px; border:1px dashed var(--border); border-radius:8px;" />
+    <!-- MODAL: DELETE -->
+    <div class="modal-overlay" id="deleteModal">
+      <div class="modal confirm-modal" style="max-width:440px">
+        <div class="modal-header">
+          <h3>🗑️ Hapus Penerima</h3>
+          <button class="modal-close" onclick="closeDeleteModal()">✕</button>
         </div>
-        
-        <div style="margin-top:16px;padding:14px;background:rgba(56,189,130,0.06);border-radius:10px;border:1px solid var(--border)">
-          <p style="font-size:12px;color:var(--text-2);line-height:1.9">
-            <strong style="color:var(--accent)">Format Excel yang didukung:</strong><br/>
-            Sama persis dengan format saat Anda menekan tombol Export Excel.<br/>
-            <em style="color:var(--text-3)">Baris header akan dilewati otomatis.</em>
+        <div class="modal-body">
+          <p style="color:var(--text-2);font-size:14px;line-height:1.8">
+            Apakah Anda yakin ingin menghapus penerima ini?<br/>
+            <strong id="deleteItemName" style="color:var(--text-1)"></strong><br/><br/>
+            <span style="color:var(--danger);font-size:12.5px">⚠️ Tindakan ini tidak dapat dibatalkan.</span>
           </p>
         </div>
-        <div style="margin-top:12px;display:flex;align-items:center;gap:10px">
-          <input type="checkbox" id="importReplace" name="replace" value="true" style="accent-color:var(--accent);width:16px;height:16px" />
-          <label for="importReplace" style="font-size:13px;color:var(--text-2);cursor:pointer">
-            Ganti semua data yang ada (Truncate tabel)
-          </label>
+        <div class="modal-footer">
+          <button class="btn btn-outline" onclick="closeDeleteModal()">Batal</button>
+          <button class="btn" style="background:var(--danger);color:#fff" onclick="confirmDelete()" id="deleteSubmitBtn">🗑️ Hapus</button>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="closeImportModal()">Batal</button>
-        <button type="submit" class="btn btn-primary">📥 Mulai Import</button>
-      </div>
-    </form>
-  </div>
-</div>
+    </div>
 
+</div>
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
-
-// ========== DATA STORE ==========
-let masterData = {!! isset($data) ? $data->map(function($item) {
-    return [
-        'id' => $item->id,
-        'status_umur' => $item->status_umur_tanaman ?? null,
-        'item_kerja' => $item->item_kerja ?? null,
-        'datar_norma' => (float)($item->datar_norma ?? 0),
-        'datar_rotasi' => (float)($item->datar_rotasi ?? 0),
-        'datar_nxr' => (float)($item->datar_nxr ?? 0),
-        'roling1_norma' => (float)($item->roling1_norma ?? 0),
-        'roling1_rotasi' => (float)($item->roling1_rotasi ?? 0),
-        'roling1_nxr' => (float)($item->roling1_nxr ?? 0),
-        'roling2_norma' => (float)($item->roling2_norma ?? 0),
-        'roling2_rotasi' => (float)($item->roling2_rotasi ?? 0),
-        'roling2_nxr' => (float)($item->roling2_nxr ?? 0),
-    ];
-})->toJson() : '[]' !!};
-
+let userData = {!! isset($telegramUsers) ? $telegramUsers->toJson() : '[]' !!};
 let filteredData = [];
 let currentPage = 1;
+const perPage = 10;
 let editingId = null;
-let deleteTargetId = null;
-let pendingImportData = [];
+let deletingId = null;
 
-document.addEventListener('DOMContentLoaded', () => {
-  updateFilterDropdown();
-  applyFilter();
-  updateStats();
-});
-
-function saveToStorage() {
-  updateStats();
-}
-
-// ========== FILTER ==========
 function applyFilter() {
-  const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  const s = document.getElementById('filterStatus').value;
-  filteredData = masterData.filter(r => {
-    const matchQ = !q || (r.item_kerja||'').toLowerCase().includes(q) || (r.status_umur||'').toLowerCase().includes(q);
-    const matchS = !s || r.status_umur === s;
-    return matchQ && matchS;
+  const s = document.getElementById('searchInput').value.toLowerCase();
+  filteredData = userData.filter(r => {
+    return (r.name && r.name.toLowerCase().includes(s)) || (r.chat_id && r.chat_id.toLowerCase().includes(s));
   });
   currentPage = 1;
   renderTable();
-  updateStats();
 }
 
-function updateFilterDropdown() {
-  const sel = document.getElementById('filterStatus');
-  const cur = sel.value;
-  const statuses = [...new Set(masterData.map(r=>r.status_umur).filter(Boolean))].sort();
-  sel.innerHTML = '<option value="">Semua Status</option>' +
-    statuses.map(s => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
-}
-
-// ========== RENDER ==========
 function renderTable() {
-  const perPage = parseInt(document.getElementById('filterRows').value)||0;
-  const total = filteredData.length;
-  const totalPages = perPage ? Math.ceil(total/perPage) : 1;
-  const start = perPage ? (currentPage-1)*perPage : 0;
-  const end   = perPage ? Math.min(start+perPage, total) : total;
-  const page  = filteredData.slice(start, end);
   const tbody = document.getElementById('tableBody');
-
-  if (!page.length) {
-    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">
-      <div class="icon">📭</div><h3>Tidak ada data</h3>
-      <p>Coba ubah filter atau tambahkan data baru</p>
-    </div></td></tr>`;
-    document.getElementById('paginationInfo').textContent = 'Tidak ada data';
+  tbody.innerHTML = '';
+  
+  if(filteredData.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3"><div class="empty-state"><div class="icon">📬</div><h3>Tidak ada penerima</h3><p>Belum ada data penerima notifikasi yang ditambahkan.</p></div></td></tr>';
+    document.getElementById('paginationInfo').textContent = 'Menampilkan 0 data';
     document.getElementById('paginationBtns').innerHTML = '';
     return;
   }
 
-  const fmt = v => (v===null||v===undefined||v==='') ? '<span style="color:var(--text-3)">–</span>'
-    : `<span class="num-cell">${typeof v==='number'?numFmt(v):v}</span>`;
-  const fmtA = v => (v===null||v===undefined||v==='') ? '<span style="color:var(--text-3)">–</span>'
-    : `<span class="num-cell accent">${typeof v==='number'?numFmt(v):v}</span>`;
+  const start = (currentPage - 1) * perPage;
+  const end = start + perPage;
+  const pageData = filteredData.slice(start, end);
 
-  tbody.innerHTML = page.map(row => {
-    const bc = row.status_umur?.startsWith('TBM') ? 'badge-tbm'
-             : row.status_umur==='TM TUA' ? 'badge-tmtua' : 'badge-tm';
-    return `<tr>
-      <td class="left"><span class="badge-status ${bc}">${row.status_umur||'–'}</span></td>
-      <td class="left" style="color:var(--text-1);font-weight:500;max-width:220px">${row.item_kerja||'–'}</td>
-      <td>${fmt(row.datar_norma)}</td><td>${fmt(row.datar_rotasi)}</td><td>${fmtA(row.datar_nxr)}</td>
-      <td>${fmt(row.roling1_norma)}</td><td>${fmt(row.roling1_rotasi)}</td><td>${fmtA(row.roling1_nxr)}</td>
-      <td>${fmt(row.roling2_norma)}</td><td>${fmt(row.roling2_rotasi)}</td><td>${fmtA(row.roling2_nxr)}</td>
-      <td><div style="display:flex;gap:6px;justify-content:center">
-        <button class="btn btn-edit-sm" onclick="openEdit(${row.id})" title="Edit">✏️ Edit</button>
-        <button class="btn btn-danger-sm" onclick="openDelete(${row.id})" title="Hapus">🗑️</button>
-      </div></td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('paginationInfo').textContent =
-    `Menampilkan ${start+1}–${end} dari ${total} data`;
-
-  const pb = document.getElementById('paginationBtns');
-  if (!perPage || totalPages<=1) { pb.innerHTML=''; return; }
-  let btns = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>`;
-  pageRange(currentPage, totalPages).forEach(p => {
-    btns += p==='...'
-      ? `<button class="page-btn" disabled>…</button>`
-      : `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  let html = '';
+  pageData.forEach(r => {
+    html += `
+      <tr>
+        <td class="left" style="font-weight:600; color:#fff;">${r.name}</td>
+        <td class="left" style="font-family:monospace; color:var(--info);">${r.chat_id}</td>
+        <td>
+          <div style="display:flex;align-items:center;justify-content:center;gap:6px">
+            <button class="btn-edit-sm" onclick="openEdit(${r.id})">✏️ Edit</button>
+            <button class="btn-danger-sm" onclick="openDelete(${r.id}, '${r.name}')">🗑️ Hapus</button>
+          </div>
+        </td>
+      </tr>
+    `;
   });
-  btns += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>›</button>`;
-  pb.innerHTML = btns;
+  tbody.innerHTML = html;
+  
+  document.getElementById('paginationInfo').textContent = `Menampilkan ${start+1}-${Math.min(end, filteredData.length)} dari ${filteredData.length} penerima`;
+  renderPagination();
 }
 
-function numFmt(v) {
-  if (Number.isInteger(v)) return v.toString();
-  return parseFloat(v.toFixed(4)).toString();
+function renderPagination() {
+  const totalPages = Math.ceil(filteredData.length / perPage);
+  const cont = document.getElementById('paginationBtns');
+  if(totalPages <= 1) { cont.innerHTML=''; return; }
+
+  let html = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>&lsaquo;</button>`;
+  for(let i=1; i<=totalPages; i++) {
+    html += `<button class="page-btn ${currentPage===i?'active':''}" onclick="goPage(${i})">${i}</button>`;
+  }
+  html += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}>&rsaquo;</button>`;
+  cont.innerHTML = html;
 }
-function pageRange(cur, total) {
-  if (total<=7) return Array.from({length:total},(_,i)=>i+1);
-  const p=[];
-  if(cur<=4){for(let i=1;i<=5;i++)p.push(i);p.push('...');p.push(total);}
-  else if(cur>=total-3){p.push(1);p.push('...');for(let i=total-4;i<=total;i++)p.push(i);}
-  else{p.push(1);p.push('...');for(let i=cur-1;i<=cur+1;i++)p.push(i);p.push('...');p.push(total);}
-  return p;
-}
+
 function goPage(p) {
-  const perPage = parseInt(document.getElementById('filterRows').value)||0;
-  const total = filteredData.length;
-  const totalPages = perPage ? Math.ceil(total/perPage) : 1;
-  if(p<1||p>totalPages) return;
-  currentPage=p; renderTable();
+  const totalPages = Math.ceil(filteredData.length / perPage);
+  if(p<1 || p>totalPages) return;
+  currentPage = p;
+  renderTable();
 }
 
-// ========== STATS ==========
-function updateStats() {
-  document.getElementById('statTotal').textContent = masterData.length;
-  document.getElementById('statStatus').textContent = new Set(masterData.map(r=>r.status_umur).filter(Boolean)).size;
-  document.getElementById('statItems').textContent = new Set(masterData.map(r=>r.item_kerja).filter(Boolean)).size;
-}
-
-// ========== CRUD: ADD/EDIT ==========
 function openAdd() {
-  editingId=null;
-  document.getElementById('formModalTitle').textContent='➕ Tambah Data Norma';
-  document.getElementById('formSubmitBtn').textContent='💾 Simpan';
-  ['fStatus','fItem','fDatarNorma','fDatarRotasi','fRoling1Norma','fRoling1Rotasi','fRoling2Norma','fRoling2Rotasi'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el.tagName==='SELECT') el.value=''; else el.value='';
-  });
+  editingId = null;
+  document.getElementById('formModalTitle').textContent = '➕ Tambah Penerima';
+  document.getElementById('fName').value = '';
+  document.getElementById('fChatId').value = '';
   document.getElementById('formModal').classList.add('open');
 }
 
 function openEdit(id) {
-  const row = masterData.find(r=>r.id===id);
+  const row = userData.find(r => r.id === id);
   if(!row) return;
-  editingId=id;
-  document.getElementById('formModalTitle').textContent='✏️ Edit Data Norma';
-  document.getElementById('formSubmitBtn').textContent='💾 Update';
-  document.getElementById('fStatus').value = row.status_umur||'';
-  document.getElementById('fItem').value = row.item_kerja||'';
-  document.getElementById('fDatarNorma').value = row.datar_norma??'';
-  document.getElementById('fDatarRotasi').value = row.datar_rotasi??'';
-  document.getElementById('fRoling1Norma').value = row.roling1_norma??'';
-  document.getElementById('fRoling1Rotasi').value = row.roling1_rotasi??'';
-  document.getElementById('fRoling2Norma').value = row.roling2_norma??'';
-  document.getElementById('fRoling2Rotasi').value = row.roling2_rotasi??'';
+  editingId = id;
+  document.getElementById('formModalTitle').textContent = '✏️ Edit Penerima';
+  document.getElementById('fName').value = row.name;
+  document.getElementById('fChatId').value = row.chat_id;
   document.getElementById('formModal').classList.add('open');
 }
 
-function closeFormModal() {
-  document.getElementById('formModal').classList.remove('open');
-  editingId=null;
+function closeFormModal() { document.getElementById('formModal').classList.remove('open'); }
+
+function openDelete(id, name) {
+  deletingId = id;
+  document.getElementById('deleteItemName').textContent = name;
+  document.getElementById('deleteModal').classList.add('open');
+}
+function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); }
+
+function showToast(msg, type='success') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast ' + type;
+  const icon = type==='success' ? '✅' : '❌';
+  toast.innerHTML = `<div class="toast-icon">${icon}</div><div>${msg}</div>`;
+  container.appendChild(toast);
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
 }
 
+function submitForm() {
+  const name = document.getElementById('fName').value.trim();
+  const chat_id = document.getElementById('fChatId').value.trim();
+  if(!name || !chat_id) return showToast('Nama dan Chat ID wajib diisi!', 'error');
 
-async function submitForm() {
-  const status = document.getElementById('fStatus').value.trim();
-  const item   = document.getElementById('fItem').value.trim();
-  if(!status) { showToast('error','Status Umur Tanaman wajib dipilih!'); return; }
-  if(!item)   { showToast('error','Item Kerja wajib diisi!'); return; }
-
-  const dN  = parseFloat(document.getElementById('fDatarNorma').value)||0;
-  const dR  = parseFloat(document.getElementById('fDatarRotasi').value)||0;
-  const r1N = parseFloat(document.getElementById('fRoling1Norma').value)||0;
-  const r1R = parseFloat(document.getElementById('fRoling1Rotasi').value)||0;
-  const r2N = parseFloat(document.getElementById('fRoling2Norma').value)||0;
-  const r2R = parseFloat(document.getElementById('fRoling2Rotasi').value)||0;
-
-  const obj = {
-    status_umur_tanaman: status, item_kerja: item,
-    datar_norma: dN, datar_rotasi: dR, datar_nxr: Math.round(dN*dR*100000)/100000,
-    roling1_norma: r1N, roling1_rotasi: r1R, roling1_nxr: Math.round(r1N*r1R*100000)/100000,
-    roling2_norma: r2N, roling2_rotasi: r2R, roling2_nxr: Math.round(r2N*r2R*100000)/100000,
-  };
-
-  const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-  const url = editingId ? '/master-norma/' + editingId : '/master-norma';
+  const payload = { name, chat_id };
+  const url = editingId ? `/telegram-users/${editingId}` : '/telegram-users';
   const method = editingId ? 'PUT' : 'POST';
-  
+
   const btn = document.getElementById('formSubmitBtn');
   const originalText = btn.innerHTML;
   btn.innerHTML = '⏳ Menyimpan...';
   btn.disabled = true;
 
-  try {
-    const res = await fetch(url, {
-      method: method,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': csrf,
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(obj)
-    });
-    if(res.ok) {
-      showToast('success', editingId ? 'Data berhasil diperbarui ✓' : 'Data berhasil ditambahkan ✓');
-      setTimeout(() => location.reload(), 1000);
+  fetch(url, {
+    method: method,
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    },
+    body: JSON.stringify(payload)
+  }).then(r => r.json()).then(res => {
+    if(res.success) {
+      showToast('Data berhasil disimpan!', 'success');
+      setTimeout(() => location.reload(), 800);
     } else {
-      showToast('error', 'Gagal menyimpan data');
+      showToast('Terjadi kesalahan', 'error');
       btn.innerHTML = originalText;
       btn.disabled = false;
     }
-  } catch(e) {
-    showToast('error', 'Terjadi kesalahan sistem');
+  }).catch(()=>{
+    showToast('Gagal terhubung ke server','error');
     btn.innerHTML = originalText;
     btn.disabled = false;
-  }
+  });
 }
 
-// ========== CRUD: DELETE ==========
-function openDelete(id) {
-  const row = masterData.find(r=>r.id===id);
-  if(!row) return;
-  deleteTargetId=id;
-  document.getElementById('deleteItemName').textContent=`${row.status_umur} – ${row.item_kerja}`;
-  document.getElementById('deleteModal').classList.add('open');
-}
-function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); deleteTargetId=null; }
-
-async function confirmDelete() {
-  if(!deleteTargetId) return;
-  const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-  
+function confirmDelete() {
+  if(!deletingId) return;
   const btn = document.getElementById('deleteSubmitBtn');
   const originalText = btn.innerHTML;
   btn.innerHTML = '⏳ Menghapus...';
   btn.disabled = true;
 
-  try {
-    const res = await fetch('/master-norma/' + deleteTargetId, {
-      method: 'DELETE',
-      headers: {
-        'X-CSRF-TOKEN': csrf,
-        'Accept': 'application/json'
-      }
-    });
-    if(res.ok) {
-      showToast('info', 'Data berhasil dihapus');
-      setTimeout(() => location.reload(), 1000);
+  fetch(`/telegram-users/${deletingId}`, {
+    method: 'DELETE',
+    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') }
+  }).then(r => r.json()).then(res => {
+    if(res.success) {
+      showToast('Data berhasil dihapus!', 'success');
+      setTimeout(() => location.reload(), 800);
     } else {
-      showToast('error', 'Gagal menghapus data');
+      showToast('Terjadi kesalahan', 'error');
       btn.innerHTML = originalText;
       btn.disabled = false;
     }
-  } catch(e) {
-    showToast('error', 'Terjadi kesalahan sistem');
+  }).catch(()=>{
+    showToast('Gagal terhubung ke server','error');
     btn.innerHTML = originalText;
     btn.disabled = false;
-  }
-}
-
-// ========== EXPORT ==========
-function exportExcel() {
-  if(!masterData.length) { showToast('error','Tidak ada data untuk diekspor'); return; }
-  const wb = XLSX.utils.book_new();
-  const rows = [
-    ['Status Umur Tanaman','Item Kerja','Topografi','','','','','','','',''],
-    ['','','Datar','','','Roling 1','','','Roling 2 / Rendahan','',''],
-    ['','','Norma (Hk/Ha)','Rotasi Kerja','N x R (Hk/Ha)','Norma (Hk/Ha)','Rotasi Kerja','N x R (Hk/Ha)','Norma (Hk/Ha)','Rotasi Kerja','N x R (Hk/Ha)'],
-    ...masterData.map(r=>[
-      r.status_umur,r.item_kerja,
-      r.datar_norma,r.datar_rotasi,r.datar_nxr,
-      r.roling1_norma,r.roling1_rotasi,r.roling1_nxr,
-      r.roling2_norma,r.roling2_rotasi,r.roling2_nxr
-    ])
-  ];
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:18},{wch:30},{wch:12},{wch:10},{wch:12},{wch:12},{wch:10},{wch:12},{wch:12},{wch:10},{wch:12}];
-  XLSX.utils.book_append_sheet(wb, ws, 'Master Norma');
-  const fname = `master_norma_sawit_${new Date().toISOString().slice(0,10)}.xlsx`;
-  XLSX.writeFile(wb, fname);
-  showToast('success',`File "${fname}" berhasil diunduh`);
-}
-
-// ========== IMPORT ==========
-function openImport() {
-  document.getElementById('importModal').classList.add('open');
-}
-function closeImportModal() { document.getElementById('importModal').classList.remove('open'); }
-
-// ========== TOAST ==========
-function showToast(type,msg) {
-  const icons={success:'✅',error:'❌',info:'ℹ️'};
-  const c=document.getElementById('toastContainer');
-  const t=document.createElement('div');
-  t.className=`toast ${type}`;
-  t.innerHTML=`<span class="toast-icon">${icons[type]||'•'}</span><span>${msg}</span>`;
-  c.appendChild(t);
-  setTimeout(()=>{t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(()=>t.remove(),400);},3500);
-}
-
-// Close on overlay click
-['formModal','deleteModal','importModal'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',function(e){
-    if(e.target===this) this.classList.remove('open');
   });
-});
-</script>
+}
 
-@if(session('success'))
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    showToast('success', '{{ session('success') }}');
+document.getElementById('tokenForm').addEventListener('submit', function() {
+    const btn = document.getElementById('btnSaveToken');
+    btn.innerHTML = '⏳ Menyimpan...';
+    btn.disabled = true;
 });
+
+// init
+applyFilter();
 </script>
-@endif
-@if(session('error'))
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-    showToast('error', '{{ session('error') }}');
-});
-</script>
-@endif
 </body>
-
 </html>

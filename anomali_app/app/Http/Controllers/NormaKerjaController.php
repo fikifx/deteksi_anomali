@@ -63,38 +63,32 @@ class NormaKerjaController extends Controller
 
     public function import(Request $request)
     {
-        $replace = $request->input('replace', false);
-        $data = $request->input('data', []);
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv'
+        ]);
 
-        if (empty($data)) {
-            return response()->json(['success' => false, 'message' => 'No data provided'], 400);
-        }
+        $replace = filter_var($request->input('replace', false), FILTER_VALIDATE_BOOLEAN);
 
         if ($replace) {
             NormaKerja::truncate();
         }
 
-        foreach ($data as $row) {
-            NormaKerja::create([
-                'status_umur_tanaman' => $row['status_umur_tanaman'] ?? '',
-                'item_kerja' => $row['item_kerja'] ?? '',
-                'datar_norma' => $row['datar_norma'] ?? null,
-                'datar_rotasi' => $row['datar_rotasi'] ?? null,
-                'datar_nxr' => $row['datar_nxr'] ?? null,
-                'roling1_norma' => $row['roling1_norma'] ?? null,
-                'roling1_rotasi' => $row['roling1_rotasi'] ?? null,
-                'roling1_nxr' => $row['roling1_nxr'] ?? null,
-                'roling2_norma' => $row['roling2_norma'] ?? null,
-                'roling2_rotasi' => $row['roling2_rotasi'] ?? null,
-                'roling2_nxr' => $row['roling2_nxr'] ?? null,
-            ]);
-        }
+        \Maatwebsite\Excel\Facades\Excel::import(new \App\Imports\NormaKerjaImport, $request->file('file'));
 
-        return response()->json(['success' => true]);
+        return redirect()->back()->with('success', 'Data Excel berhasil diimport!');
+    }
+
+    public function export()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\NormaKerjaExport, 'Master_Data_Norma_Kerja.xlsx');
     }
 
     public function overview()
     {
-        return view('dashboard');
+        $rawatData = \App\Models\NormaRawat::where('created_at', '>=', \Carbon\Carbon::now()->subMonth())
+            ->orderBy('created_at', 'desc')
+            ->get();
+        $masterNorma = \App\Models\NormaKerja::all();
+        return view('dashboard', compact('rawatData', 'masterNorma'));
     }
 }

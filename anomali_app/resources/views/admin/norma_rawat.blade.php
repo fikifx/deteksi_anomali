@@ -125,7 +125,10 @@
     .stat-card.orange .value{ color:var(--warning); }
     .stat-card .sub { font-size:12px; color:var(--text-2); }
     .stat-card .icon { position:absolute; top:18px; right:18px; font-size:28px; opacity:.15; }
-    /* TABLE CARD */
+    
+    .table-wrap th.sticky-col { position: sticky; left: 0; z-index: 12; background: rgba(10,15,26,1); border-right: 1px solid var(--border); }
+    .table-wrap td.sticky-col { position: sticky; left: 0; z-index: 10; background: var(--bg-card); border-right: 1px solid var(--border); }
+/* TABLE CARD */
     .table-card {
       background:var(--bg-card); border:1px solid var(--border);
       border-radius:var(--radius); backdrop-filter:blur(16px); overflow:hidden;
@@ -253,7 +256,11 @@
     .modal-close:hover { border-color:var(--danger);color:var(--danger); }
     .modal-body { padding:24px 28px; }
     .modal-footer { padding:16px 28px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; }
-    /* FORM */
+    
+    .badge-success { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.4); }
+    .badge-danger { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.4); }
+    .badge-info { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.4); }
+/* FORM */
     .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
     .form-group { display:flex; flex-direction:column; gap:6px; }
     .form-group.full { grid-column:1/-1; }
@@ -358,7 +365,7 @@
 
 <div class="main-wrap">
   <header class="topbar">
-    <div class="breadcrumb">Home &rsaquo; <span>Master Data Norma</span></div>
+    <div class="breadcrumb">Home &rsaquo; <span>Data Norma Rawat</span></div>
     <div class="topbar-right">
       <div class="badge-dot"></div>
       <div style="font-size:12px;color:var(--text-2)">{{ Auth::user()->name ?? 'Admin' }}</div>
@@ -371,7 +378,7 @@
 
   <main class="content">
     <div class="page-header">
-      <h1>📋 Master Data Norma Kerja</h1>
+      <h1>📋 Data Norma Rawat Kerja</h1>
       <p>Manajemen norma kerja per topografi untuk monitoring anggaran perkebunan kelapa sawit</p>
     </div>
 
@@ -421,36 +428,44 @@
         </div>
         <div class="toolbar-right">
           <button class="btn btn-import" onclick="openImport()">📥 Import Excel</button>
-          <a href="{{ route('master.export') }}" class="btn btn-excel" style="text-decoration:none">📥 Export Excel</a>
+          <a href="{{ route('rawat.export') }}" class="btn btn-excel" style="text-decoration:none">📥 Export Excel</a>
           <button class="btn btn-primary" onclick="openAdd()">＋ Tambah Data</button>
         </div>
       </div>
 
       <div class="table-wrap">
         <table id="masterTable">
-          <thead>
-            <tr>
-              <th class="th-group left" colspan="2">Identifikasi</th>
-              <th class="th-group" colspan="3">🏔️ Datar</th>
-              <th class="th-group" colspan="3">⛰️ Roling 1</th>
-              <th class="th-group" colspan="3">🌊 Roling 2 / Rendahan</th>
-              <th class="th-group">Aksi</th>
-            </tr>
-            <tr>
-              <th class="left" style="min-width:130px">Status Umur</th>
-              <th class="left" style="min-width:200px">Item Kerja</th>
-              <th style="min-width:90px">Norma<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
-              <th style="min-width:80px">Rotasi<br/><small style="font-weight:400;color:var(--text-3)">Kerja</small></th>
-              <th style="min-width:90px">N×R<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
-              <th style="min-width:90px">Norma<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
-              <th style="min-width:80px">Rotasi<br/><small style="font-weight:400;color:var(--text-3)">Kerja</small></th>
-              <th style="min-width:90px">N×R<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
-              <th style="min-width:90px">Norma<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
-              <th style="min-width:80px">Rotasi<br/><small style="font-weight:400;color:var(--text-3)">Kerja</small></th>
-              <th style="min-width:90px">N×R<br/><small style="font-weight:400;color:var(--text-3)">(Hk/Ha)</small></th>
+          <thead><tr>
+              <th style="min-width:50px" class="sticky-col">No</th>
+              <th style="min-width:100px">SITECODE</th>
+              <th style="min-width:100px">TDATE</th>
+              <th style="min-width:100px">AFDCODE</th>
+              <th style="min-width:100px">LOCATION</th>
+              <th style="min-width:120px">PLANTINGDATE</th>
+              <th style="min-width:100px">JOBTYPE</th>
+              <th style="min-width:150px">JOBTYPEDESC</th>
+              <th style="min-width:80px">TYPE</th>
+              <th style="min-width:120px">JOBGROUPCODE</th>
+              <th style="min-width:100px">JOBCODE</th>
+              <th style="min-width:150px">JOBDESC</th>
+              <th style="min-width:80px">UOM</th>
+              <th style="min-width:80px">UMP</th>
+              <th style="min-width:120px">HECTPLANTED</th>
+              <th style="min-width:120px">MANDAYS_HI</th>
+              <th style="min-width:120px">MANDAYS_SHI</th>
+              <th style="min-width:120px">HK_PER_HA_HI</th>
+              <th style="min-width:120px">HK_PER_HA_SHI</th>
+              <th style="min-width:120px">PRODUKSI_HI</th>
+              <th style="min-width:120px">PRODUKSI_SHI</th>
+              <th style="min-width:100px">COST_HI</th>
+              <th style="min-width:100px">COST_SHI</th>
+              <th style="min-width:100px">PREMI_HI</th>
+              <th style="min-width:100px">PREMI_SHI</th>
+              <th style="min-width:120px">ADDCOST_HI</th>
+              <th style="min-width:120px">ADDCOST_SHI</th>
+              <th style="min-width:150px">STATUS</th>
               <th style="min-width:110px">Aksi</th>
-            </tr>
-          </thead>
+</tr></thead>
           <tbody id="tableBody"></tbody>
         </table>
       </div>
@@ -472,55 +487,42 @@
     </div>
     <div class="modal-body">
       <div class="form-grid">
-        <div class="form-group">
-          <label>Status Umur Tanaman *</label>
-          <select id="fStatus">
-            <option value="">Pilih Status</option>
-            <option value="TM-1">TM-1</option>
-            <option value="TM-2">TM-2</option>
-            <option value="TM3-5">TM3-5</option>
-            <option value="TM6-10">TM6-10</option>
-            <option value="TM11-17">TM11-17</option>
-            <option value="TM TUA">TM TUA</option>
-            <option value="TBM 1">TBM 1</option>
-            <option value="TBM 2">TBM 2</option>
-            <option value="TBM 3">TBM 3</option>
+        <div class="form-group"><label>SITECODE</label><input type="text" id="f_sitecode"></div>
+        <div class="form-group"><label>TDATE</label><input type="date" id="f_tdate"></div>
+        <div class="form-group"><label>AFDCODE</label><input type="text" id="f_afdcode"></div>
+        <div class="form-group"><label>LOCATION</label><input type="text" id="f_location"></div>
+        <div class="form-group"><label>PLANTINGDATE</label><input type="number" id="f_plantingdate"></div>
+        <div class="form-group"><label>JOBTYPE</label><input type="text" id="f_jobtype"></div>
+        <div class="form-group"><label>JOBTYPEDESC</label><input type="text" id="f_jobtypedesc"></div>
+        <div class="form-group"><label>TYPE</label><input type="text" id="f_type"></div>
+        <div class="form-group"><label>JOBGROUPCODE</label><input type="text" id="f_jobgroupcode"></div>
+        <div class="form-group"><label>JOBCODE</label><input type="text" id="f_jobcode"></div>
+        <div class="form-group"><label>JOBDESC</label>
+          <select id="f_jobdesc">
+            <option value="">-- Pilih Item Kerja --</option>
+            @foreach($masterItems as $item)
+              <option value="{{ $item }}">{{ $item }}</option>
+            @endforeach
           </select>
         </div>
-        <div class="form-group">
-          <label>Item Kerja *</label>
-          <input type="text" id="fItem" placeholder="Contoh: CW - Manual" />
-        </div>
-        <div class="form-divider">🏔️ Datar</div>
-        <div class="form-group">
-          <label>Norma (Hk/Ha)</label>
-          <input type="number" id="fDatarNorma" step="0.0001" placeholder="0.0000" />
-        </div>
-        <div class="form-group">
-          <label>Rotasi Kerja</label>
-          <input type="number" id="fDatarRotasi" step="0.5" placeholder="0" />
-        </div>
-        <div class="form-divider">⛰️ Roling 1</div>
-        <div class="form-group">
-          <label>Norma (Hk/Ha)</label>
-          <input type="number" id="fRoling1Norma" step="0.0001" placeholder="0.0000" />
-        </div>
-        <div class="form-group">
-          <label>Rotasi Kerja</label>
-          <input type="number" id="fRoling1Rotasi" step="0.5" placeholder="0" />
-        </div>
-        <div class="form-divider">🌊 Roling 2 / Rendahan</div>
-        <div class="form-group">
-          <label>Norma (Hk/Ha)</label>
-          <input type="number" id="fRoling2Norma" step="0.0001" placeholder="0.0000" />
-        </div>
-        <div class="form-group">
-          <label>Rotasi Kerja</label>
-          <input type="number" id="fRoling2Rotasi" step="0.5" placeholder="0" />
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
+        <div class="form-group"><label>UOM</label><input type="text" id="f_uom"></div>
+        
+        <div class="form-divider">Data Angka</div>
+        <div class="form-group"><label>UMP</label><input type="number" step="0.0001" id="f_ump"></div>
+        <div class="form-group"><label>HECTPLANTED</label><input type="number" step="0.0001" id="f_hectplanted"></div>
+        <div class="form-group"><label>MANDAYS_HI</label><input type="number" step="0.0001" id="f_mandays_hi"></div>
+        <div class="form-group"><label>MANDAYS_SHI</label><input type="number" step="0.0001" id="f_mandays_shi"></div>
+        <div class="form-group"><label>HK_PER_HA_HI</label><input type="number" step="0.0001" id="f_hk_per_ha_hi"></div>
+        <div class="form-group"><label>HK_PER_HA_SHI</label><input type="number" step="0.0001" id="f_hk_per_ha_shi"></div>
+        <div class="form-group"><label>PRODUKSI_HI</label><input type="number" step="0.0001" id="f_produksi_hi"></div>
+        <div class="form-group"><label>PRODUKSI_SHI</label><input type="number" step="0.0001" id="f_produksi_shi"></div>
+        <div class="form-group"><label>COST_HI</label><input type="number" step="0.0001" id="f_cost_hi"></div>
+        <div class="form-group"><label>COST_SHI</label><input type="number" step="0.0001" id="f_cost_shi"></div>
+        <div class="form-group"><label>PREMI_HI</label><input type="number" step="0.0001" id="f_premi_hi"></div>
+        <div class="form-group"><label>PREMI_SHI</label><input type="number" step="0.0001" id="f_premi_shi"></div>
+        <div class="form-group"><label>ADDCOST_HI</label><input type="number" step="0.0001" id="f_addcost_hi"></div>
+        <div class="form-group"><label>ADDCOST_SHI</label><input type="number" step="0.0001" id="f_addcost_shi"></div>
+</div></div><div class="modal-footer">
       <button class="btn btn-outline" onclick="closeFormModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitForm()" id="formSubmitBtn">💾 Simpan</button>
     </div>
@@ -555,7 +557,7 @@
       <h3>📥 Import Data dari Excel</h3>
       <button class="modal-close" onclick="closeImportModal()">✕</button>
     </div>
-    <form action="{{ route('master.import') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('rawat.import') }}" method="POST" enctype="multipart/form-data">
       @csrf
       <div class="modal-body">
         <div style="margin-bottom:15px">
@@ -584,27 +586,29 @@
   </div>
 </div>
 
+
+<!-- MODAL: DETAIL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal" style="max-width:550px">
+    <div class="modal-header">
+      <h3 id="detailTitle">👁️ Detail Fluktuasi Norma</h3>
+      <button class="modal-close" onclick="closeDetailModal()">✕</button>
+    </div>
+    <div class="modal-body" style="padding-top:10px;">
+      <div id="detailContent"></div>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
 
 // ========== DATA STORE ==========
-let masterData = {!! isset($data) ? $data->map(function($item) {
-    return [
-        'id' => $item->id,
-        'status_umur' => $item->status_umur_tanaman ?? null,
-        'item_kerja' => $item->item_kerja ?? null,
-        'datar_norma' => (float)($item->datar_norma ?? 0),
-        'datar_rotasi' => (float)($item->datar_rotasi ?? 0),
-        'datar_nxr' => (float)($item->datar_nxr ?? 0),
-        'roling1_norma' => (float)($item->roling1_norma ?? 0),
-        'roling1_rotasi' => (float)($item->roling1_rotasi ?? 0),
-        'roling1_nxr' => (float)($item->roling1_nxr ?? 0),
-        'roling2_norma' => (float)($item->roling2_norma ?? 0),
-        'roling2_rotasi' => (float)($item->roling2_rotasi ?? 0),
-        'roling2_nxr' => (float)($item->roling2_nxr ?? 0),
-    ];
-})->toJson() : '[]' !!};
+
+let masterData = {!! $data->toJson() !!};
+let masterNormaData = {!! $masterNormaData->toJson() !!};
+
 
 let filteredData = [];
 let currentPage = 1;
@@ -622,13 +626,44 @@ function saveToStorage() {
   updateStats();
 }
 
+
+function calcStatus(r) {
+  let realisasi = 0;
+  if(r.produksi_shi && r.produksi_shi > 0) {
+    realisasi = r.mandays_shi / r.produksi_shi;
+  }
+  const master = masterNormaData.find(m => m.item_kerja === r.jobdesc);
+  const standar = master && master.datar_norma ? parseFloat(master.datar_norma) : 0;
+  
+  let fluktuasi = 0;
+  if (standar > 0) {
+    fluktuasi = ((realisasi - standar) / standar) * 100;
+  }
+  
+  let statusText = 'Normal';
+  let badgeCls = 'badge-success';
+  if (fluktuasi > 100) {
+    statusText = 'Over Norma';
+    badgeCls = 'badge-danger';
+  } else if (fluktuasi < 0) {
+    statusText = 'Di Bawah Norma';
+    badgeCls = 'badge-info';
+  }
+  if (!standar) {
+    statusText = 'N/A';
+    badgeCls = 'badge-tmtua';
+  }
+  return { statusText, badgeCls, fluktuasi, realisasi, standar };
+}
+
 // ========== FILTER ==========
 function applyFilter() {
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
   const s = document.getElementById('filterStatus').value;
   filteredData = masterData.filter(r => {
-    const matchQ = !q || (r.item_kerja||'').toLowerCase().includes(q) || (r.status_umur||'').toLowerCase().includes(q);
-    const matchS = !s || r.status_umur === s;
+    const st = calcStatus(r);
+    const matchQ = !q || (r.jobdesc||'').toLowerCase().includes(q) || (r.sitecode||'').toLowerCase().includes(q) || (r.location||'').toLowerCase().includes(q);
+    const matchS = !s || st.statusText === s;
     return matchQ && matchS;
   });
   currentPage = 1;
@@ -639,7 +674,7 @@ function applyFilter() {
 function updateFilterDropdown() {
   const sel = document.getElementById('filterStatus');
   const cur = sel.value;
-  const statuses = [...new Set(masterData.map(r=>r.status_umur).filter(Boolean))].sort();
+  const statuses = ['Over Norma', 'Normal', 'Di Bawah Norma', 'N/A'];
   sel.innerHTML = '<option value="">Semua Status</option>' +
     statuses.map(s => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
 }
@@ -669,18 +704,44 @@ function renderTable() {
   const fmtA = v => (v===null||v===undefined||v==='') ? '<span style="color:var(--text-3)">–</span>'
     : `<span class="num-cell accent">${typeof v==='number'?numFmt(v):v}</span>`;
 
-  tbody.innerHTML = page.map(row => {
-    const bc = row.status_umur?.startsWith('TBM') ? 'badge-tbm'
-             : row.status_umur==='TM TUA' ? 'badge-tmtua' : 'badge-tm';
+        tbody.innerHTML = page.map((r, i) => {
+    
+    const st = calcStatus(r);
+    const statusCol = `<span class="badge-status ${st.badgeCls}">${st.statusText}</span><br><small style="color:var(--text-3);font-size:10px">${st.fluktuasi.toFixed(1)}%</small>`;
+
     return `<tr>
-      <td class="left"><span class="badge-status ${bc}">${row.status_umur||'–'}</span></td>
-      <td class="left" style="color:var(--text-1);font-weight:500;max-width:220px">${row.item_kerja||'–'}</td>
-      <td>${fmt(row.datar_norma)}</td><td>${fmt(row.datar_rotasi)}</td><td>${fmtA(row.datar_nxr)}</td>
-      <td>${fmt(row.roling1_norma)}</td><td>${fmt(row.roling1_rotasi)}</td><td>${fmtA(row.roling1_nxr)}</td>
-      <td>${fmt(row.roling2_norma)}</td><td>${fmt(row.roling2_rotasi)}</td><td>${fmtA(row.roling2_nxr)}</td>
+      <td class="sticky-col" style="text-align:center">${start + i + 1}</td>
+      <td>${r.sitecode||'-'}</td>
+      <td style="white-space:nowrap">${r.tdate||'-'}</td>
+      <td>${r.afdcode||'-'}</td>
+      <td>${r.location||'-'}</td>
+      <td>${r.plantingdate||'-'}</td>
+      <td>${r.jobtype||'-'}</td>
+      <td>${r.jobtypedesc||'-'}</td>
+      <td>${r.type||'-'}</td>
+      <td>${r.jobgroupcode||'-'}</td>
+      <td>${r.jobcode||'-'}</td>
+      <td>${r.jobdesc||'-'}</td>
+      <td>${r.uom||'-'}</td>
+      <td>${fmt(r.ump)}</td>
+      <td>${fmt(r.hectplanted)}</td>
+      <td>${fmt(r.mandays_hi)}</td>
+      <td>${fmt(r.mandays_shi)}</td>
+      <td>${fmt(r.hk_per_ha_hi)}</td>
+      <td>${fmt(r.hk_per_ha_shi)}</td>
+      <td>${fmt(r.produksi_hi)}</td>
+      <td>${fmt(r.produksi_shi)}</td>
+      <td>${fmt(r.cost_hi)}</td>
+      <td>${fmt(r.cost_shi)}</td>
+      <td>${fmt(r.premi_hi)}</td>
+      <td>${fmt(r.premi_shi)}</td>
+      <td>${fmt(r.addcost_hi)}</td>
+      <td>${fmt(r.addcost_shi)}</td>
+      <td>${statusCol}</td>
       <td><div style="display:flex;gap:6px;justify-content:center">
-        <button class="btn btn-edit-sm" onclick="openEdit(${row.id})" title="Edit">✏️ Edit</button>
-        <button class="btn btn-danger-sm" onclick="openDelete(${row.id})" title="Hapus">🗑️</button>
+        <button class="btn btn-primary" style="padding:5px 8px;font-size:11px" onclick="openDetail(${r.id})" title="Lihat Detail">👁️ Detail</button>
+        <button class="btn btn-edit-sm" onclick="openEdit(${r.id})" title="Edit">✏️</button>
+        <button class="btn btn-danger-sm" onclick="openDelete(${r.id})" title="Hapus">🗑️</button>
       </div></td>
     </tr>`;
   }).join('');
@@ -720,24 +781,116 @@ function goPage(p) {
   currentPage=p; renderTable();
 }
 
-// ========== STATS ==========
 function updateStats() {
   document.getElementById('statTotal').textContent = masterData.length;
-  document.getElementById('statStatus').textContent = new Set(masterData.map(r=>r.status_umur).filter(Boolean)).size;
-  document.getElementById('statItems').textContent = new Set(masterData.map(r=>r.item_kerja).filter(Boolean)).size;
+  document.getElementById('statStatus').textContent = new Set(masterData.map(r=>r.jobtype).filter(Boolean)).size;
+  document.getElementById('statItems').textContent = new Set(masterData.map(r=>r.jobdesc).filter(Boolean)).size;
+}
+
+
+function closeDetailModal() {
+  document.getElementById('detailModal').classList.remove('open');
+}
+
+function openDetail(id) {
+  const r = masterData.find(x => x.id === id);
+  if(!r) return;
+  
+  let realisasi = 0;
+  if(r.produksi_shi && r.produksi_shi > 0) {
+    realisasi = r.mandays_shi / r.produksi_shi;
+  }
+  
+  const master = masterNormaData.find(m => m.item_kerja === r.jobdesc);
+  const standar = master && master.datar_norma ? parseFloat(master.datar_norma) : 0;
+  
+  let fluktuasi = 0;
+  if (standar > 0) {
+    fluktuasi = ((realisasi - standar) / standar) * 100;
+  }
+  
+  let statusText = 'Normal';
+  let badgeCls = 'badge-success';
+  if (fluktuasi > 100) {
+    statusText = 'Over Norma';
+    badgeCls = 'badge-danger';
+  } else if (fluktuasi < 0) {
+    statusText = 'Di Bawah Norma';
+    badgeCls = 'badge-info';
+  }
+  if (!standar) {
+      statusText = 'N/A';
+      badgeCls = 'badge-tmtua';
+  }
+  
+  const content = `
+    <div style="background:var(--bg-deep); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+        <span style="color:var(--text-3); font-size:12px;">JOBDESC</span>
+        <strong style="color:var(--text-1)">${r.jobdesc || '-'}</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+        <span style="color:var(--text-3); font-size:12px;">MANDAYS_SHI</span>
+        <strong style="color:var(--text-1)">${r.mandays_shi || 0}</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+        <span style="color:var(--text-3); font-size:12px;">PRODUKSI_SHI</span>
+        <strong style="color:var(--text-1)">${r.produksi_shi || 0}</strong>
+      </div>
+    </div>
+    
+    <div style="background:var(--bg-deep); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
+      <h4 style="font-size:13px; margin-bottom:10px; color:var(--text-2);">Rumus Perhitungan:</h4>
+      <p style="font-size:13px; color:var(--text-1); margin-bottom:8px;">
+        <strong>Realisasi:</strong> MANDAYS_SHI / PRODUKSI_SHI<br>
+        = ${r.mandays_shi || 0} / ${r.produksi_shi || 0} <br>
+        = <span style="color:var(--accent-l)">${realisasi.toFixed(4)}</span>
+      </p>
+      <p style="font-size:13px; color:var(--text-1); margin-bottom:8px;">
+        <strong>Norma Standar (Master Datar):</strong><br>
+        = <span style="color:var(--info)">${standar.toFixed(4)}</span>
+      </p>
+      <hr style="border-color:var(--border); margin:12px 0;">
+      <p style="font-size:13px; color:var(--text-1); line-height:1.6">
+        <strong>Fluktuasi:</strong> ((Realisasi - Standar) / Standar) * 100% <br>
+        = ((${realisasi.toFixed(4)} - ${standar.toFixed(4)}) / ${standar.toFixed(4)}) * 100% <br>
+        = <strong>${fluktuasi.toFixed(2)}%</strong>
+      </p>
+    </div>
+    
+    <div style="text-align:center; padding:12px;">
+      <div style="font-size:12px; color:var(--text-3); margin-bottom:6px;">KESIMPULAN STATUS</div>
+      <span class="badge-status ${badgeCls}" style="font-size:16px; padding:6px 16px;">${statusText}</span>
+    </div>
+  `;
+  document.getElementById('detailContent').innerHTML = content;
+  document.getElementById('detailModal').classList.add('open');
 }
 
 // ========== CRUD: ADD/EDIT ==========
+
 function openAdd() {
   editingId=null;
   document.getElementById('formModalTitle').textContent='➕ Tambah Data Norma';
   document.getElementById('formSubmitBtn').textContent='💾 Simpan';
-  ['fStatus','fItem','fDatarNorma','fDatarRotasi','fRoling1Norma','fRoling1Rotasi','fRoling2Norma','fRoling2Rotasi'].forEach(id=>{
+  
+  const fields = [
+    'f_sitecode','f_tdate','f_afdcode','f_location','f_plantingdate',
+    'f_jobtype','f_jobtypedesc','f_type','f_jobgroupcode','f_jobcode',
+    'f_jobdesc','f_uom','f_ump','f_hectplanted','f_mandays_hi',
+    'f_mandays_shi','f_hk_per_ha_hi','f_hk_per_ha_shi','f_produksi_hi',
+    'f_produksi_shi','f_cost_hi','f_cost_shi','f_premi_hi','f_premi_shi',
+    'f_addcost_hi','f_addcost_shi'
+  ];
+  
+  fields.forEach(id=>{
     const el=document.getElementById(id);
-    if(el.tagName==='SELECT') el.value=''; else el.value='';
+    if(el) el.value='';
   });
+  
   document.getElementById('formModal').classList.add('open');
 }
+
 
 function openEdit(id) {
   const row = masterData.find(r=>r.id===id);
@@ -745,16 +898,37 @@ function openEdit(id) {
   editingId=id;
   document.getElementById('formModalTitle').textContent='✏️ Edit Data Norma';
   document.getElementById('formSubmitBtn').textContent='💾 Update';
-  document.getElementById('fStatus').value = row.status_umur||'';
-  document.getElementById('fItem').value = row.item_kerja||'';
-  document.getElementById('fDatarNorma').value = row.datar_norma??'';
-  document.getElementById('fDatarRotasi').value = row.datar_rotasi??'';
-  document.getElementById('fRoling1Norma').value = row.roling1_norma??'';
-  document.getElementById('fRoling1Rotasi').value = row.roling1_rotasi??'';
-  document.getElementById('fRoling2Norma').value = row.roling2_norma??'';
-  document.getElementById('fRoling2Rotasi').value = row.roling2_rotasi??'';
+  
+  document.getElementById('f_sitecode').value = row.sitecode||'';
+  document.getElementById('f_tdate').value = row.tdate||'';
+  document.getElementById('f_afdcode').value = row.afdcode||'';
+  document.getElementById('f_location').value = row.location||'';
+  document.getElementById('f_plantingdate').value = row.plantingdate||'';
+  document.getElementById('f_jobtype').value = row.jobtype||'';
+  document.getElementById('f_jobtypedesc').value = row.jobtypedesc||'';
+  document.getElementById('f_type').value = row.type||'';
+  document.getElementById('f_jobgroupcode').value = row.jobgroupcode||'';
+  document.getElementById('f_jobcode').value = row.jobcode||'';
+  document.getElementById('f_jobdesc').value = row.jobdesc||'';
+  document.getElementById('f_uom').value = row.uom||'';
+  document.getElementById('f_ump').value = row.ump??'';
+  document.getElementById('f_hectplanted').value = row.hectplanted??'';
+  document.getElementById('f_mandays_hi').value = row.mandays_hi??'';
+  document.getElementById('f_mandays_shi').value = row.mandays_shi??'';
+  document.getElementById('f_hk_per_ha_hi').value = row.hk_per_ha_hi??'';
+  document.getElementById('f_hk_per_ha_shi').value = row.hk_per_ha_shi??'';
+  document.getElementById('f_produksi_hi').value = row.produksi_hi??'';
+  document.getElementById('f_produksi_shi').value = row.produksi_shi??'';
+  document.getElementById('f_cost_hi').value = row.cost_hi??'';
+  document.getElementById('f_cost_shi').value = row.cost_shi??'';
+  document.getElementById('f_premi_hi').value = row.premi_hi??'';
+  document.getElementById('f_premi_shi').value = row.premi_shi??'';
+  document.getElementById('f_addcost_hi').value = row.addcost_hi??'';
+  document.getElementById('f_addcost_shi').value = row.addcost_shi??'';
+  
   document.getElementById('formModal').classList.add('open');
 }
+
 
 function closeFormModal() {
   document.getElementById('formModal').classList.remove('open');
@@ -762,30 +936,50 @@ function closeFormModal() {
 }
 
 
-async function submitForm() {
-  const status = document.getElementById('fStatus').value.trim();
-  const item   = document.getElementById('fItem').value.trim();
-  if(!status) { showToast('error','Status Umur Tanaman wajib dipilih!'); return; }
-  if(!item)   { showToast('error','Item Kerja wajib diisi!'); return; }
 
-  const dN  = parseFloat(document.getElementById('fDatarNorma').value)||0;
-  const dR  = parseFloat(document.getElementById('fDatarRotasi').value)||0;
-  const r1N = parseFloat(document.getElementById('fRoling1Norma').value)||0;
-  const r1R = parseFloat(document.getElementById('fRoling1Rotasi').value)||0;
-  const r2N = parseFloat(document.getElementById('fRoling2Norma').value)||0;
-  const r2R = parseFloat(document.getElementById('fRoling2Rotasi').value)||0;
+async function submitForm() {
+  const sitecode = document.getElementById('f_sitecode').value.trim();
+  const location = document.getElementById('f_location').value.trim();
+  if(!sitecode) { showToast('error','SITECODE wajib diisi!'); return; }
+  
+  const parseFloatSafe = (val) => {
+     const p = parseFloat(val);
+     return isNaN(p) ? null : p;
+  };
 
   const obj = {
-    status_umur_tanaman: status, item_kerja: item,
-    datar_norma: dN, datar_rotasi: dR, datar_nxr: Math.round(dN*dR*100000)/100000,
-    roling1_norma: r1N, roling1_rotasi: r1R, roling1_nxr: Math.round(r1N*r1R*100000)/100000,
-    roling2_norma: r2N, roling2_rotasi: r2R, roling2_nxr: Math.round(r2N*r2R*100000)/100000,
+    sitecode: sitecode,
+    tdate: document.getElementById('f_tdate').value||null,
+    afdcode: document.getElementById('f_afdcode').value,
+    location: location,
+    plantingdate: parseInt(document.getElementById('f_plantingdate').value)||null,
+    jobtype: document.getElementById('f_jobtype').value,
+    jobtypedesc: document.getElementById('f_jobtypedesc').value,
+    type: document.getElementById('f_type').value,
+    jobgroupcode: document.getElementById('f_jobgroupcode').value,
+    jobcode: document.getElementById('f_jobcode').value,
+    jobdesc: document.getElementById('f_jobdesc').value,
+    uom: document.getElementById('f_uom').value,
+    ump: parseFloatSafe(document.getElementById('f_ump').value),
+    hectplanted: parseFloatSafe(document.getElementById('f_hectplanted').value),
+    mandays_hi: parseFloatSafe(document.getElementById('f_mandays_hi').value),
+    mandays_shi: parseFloatSafe(document.getElementById('f_mandays_shi').value),
+    hk_per_ha_hi: parseFloatSafe(document.getElementById('f_hk_per_ha_hi').value),
+    hk_per_ha_shi: parseFloatSafe(document.getElementById('f_hk_per_ha_shi').value),
+    produksi_hi: parseFloatSafe(document.getElementById('f_produksi_hi').value),
+    produksi_shi: parseFloatSafe(document.getElementById('f_produksi_shi').value),
+    cost_hi: parseFloatSafe(document.getElementById('f_cost_hi').value),
+    cost_shi: parseFloatSafe(document.getElementById('f_cost_shi').value),
+    premi_hi: parseFloatSafe(document.getElementById('f_premi_hi').value),
+    premi_shi: parseFloatSafe(document.getElementById('f_premi_shi').value),
+    addcost_hi: parseFloatSafe(document.getElementById('f_addcost_hi').value),
+    addcost_shi: parseFloatSafe(document.getElementById('f_addcost_shi').value)
   };
 
   const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-  const url = editingId ? '/master-norma/' + editingId : '/master-norma';
+  const url = editingId ? '/norma-rawat/' + editingId : '/norma-rawat';
   const method = editingId ? 'PUT' : 'POST';
-  
+
   const btn = document.getElementById('formSubmitBtn');
   const originalText = btn.innerHTML;
   btn.innerHTML = '⏳ Menyimpan...';
@@ -803,7 +997,7 @@ async function submitForm() {
     });
     if(res.ok) {
       showToast('success', editingId ? 'Data berhasil diperbarui ✓' : 'Data berhasil ditambahkan ✓');
-      setTimeout(() => location.reload(), 1000);
+      setTimeout(() => window.location.reload(), 1000);
     } else {
       showToast('error', 'Gagal menyimpan data');
       btn.innerHTML = originalText;
@@ -816,12 +1010,13 @@ async function submitForm() {
   }
 }
 
+
 // ========== CRUD: DELETE ==========
 function openDelete(id) {
   const row = masterData.find(r=>r.id===id);
   if(!row) return;
   deleteTargetId=id;
-  document.getElementById('deleteItemName').textContent=`${row.status_umur} – ${row.item_kerja}`;
+  document.getElementById('deleteItemName').textContent=`${row.sitecode} - ${row.location}`;
   document.getElementById('deleteModal').classList.add('open');
 }
 function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); deleteTargetId=null; }
@@ -834,9 +1029,9 @@ async function confirmDelete() {
   const originalText = btn.innerHTML;
   btn.innerHTML = '⏳ Menghapus...';
   btn.disabled = true;
-
+  
   try {
-    const res = await fetch('/master-norma/' + deleteTargetId, {
+    const res = await fetch('/norma-rawat/' + deleteTargetId, {
       method: 'DELETE',
       headers: {
         'X-CSRF-TOKEN': csrf,
