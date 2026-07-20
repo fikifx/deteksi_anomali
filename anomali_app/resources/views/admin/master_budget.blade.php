@@ -125,10 +125,7 @@
     .stat-card.orange .value{ color:var(--warning); }
     .stat-card .sub { font-size:12px; color:var(--text-2); }
     .stat-card .icon { position:absolute; top:18px; right:18px; font-size:28px; opacity:.15; }
-    
-    .table-wrap th.sticky-col { position: sticky; left: 0; z-index: 12; background: rgba(10,15,26,1); border-right: 1px solid var(--border); }
-    .table-wrap td.sticky-col { position: sticky; left: 0; z-index: 10; background: var(--bg-card); border-right: 1px solid var(--border); }
-/* TABLE CARD */
+    /* TABLE CARD */
     .table-card {
       background:var(--bg-card); border:1px solid var(--border);
       border-radius:var(--radius); backdrop-filter:blur(16px); overflow:hidden;
@@ -256,11 +253,7 @@
     .modal-close:hover { border-color:var(--danger);color:var(--danger); }
     .modal-body { padding:24px 28px; }
     .modal-footer { padding:16px 28px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; }
-    
-    .badge-success { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.4); }
-    .badge-danger { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.4); }
-    .badge-info { background: rgba(59,130,246,0.15); color: #3b82f6; border: 1px solid rgba(59,130,246,0.4); }
-/* FORM */
+    /* FORM */
     .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
     .form-group { display:flex; flex-direction:column; gap:6px; }
     .form-group.full { grid-column:1/-1; }
@@ -397,7 +390,7 @@
 <div class="main-wrap">
   <header class="topbar">
     <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
-    <div class="breadcrumb">Home &rsaquo; <span>Data Norma Rawat</span></div>
+    <div class="breadcrumb">Home &rsaquo; <span>Master Budget</span></div>
     <div class="topbar-right">
       <div class="badge-dot"></div>
       <div style="font-size:12px;color:var(--text-2)">{{ Auth::user()->name ?? 'Admin' }}</div>
@@ -410,35 +403,8 @@
 
   <main class="content">
     <div class="page-header">
-      <h1>📋 Data Norma Rawat Kerja</h1>
-      <p>Manajemen norma kerja per topografi untuk monitoring anggaran perkebunan kelapa sawit</p>
-    </div>
-
-    <div class="stats-grid">
-      <div class="stat-card green">
-        <span class="icon">📋</span>
-        <div class="label">Total Data</div>
-        <div class="value" id="statTotal">0</div>
-        <div class="sub">Item kerja terdaftar</div>
-      </div>
-      <div class="stat-card blue">
-        <span class="icon">🌱</span>
-        <div class="label">Status Tanaman</div>
-        <div class="value" id="statStatus">0</div>
-        <div class="sub">Kategori umur tanaman</div>
-      </div>
-      <div class="stat-card purple">
-        <span class="icon">📝</span>
-        <div class="label">Item Kerja Unik</div>
-        <div class="value" id="statItems">0</div>
-        <div class="sub">Jenis pekerjaan berbeda</div>
-      </div>
-      <div class="stat-card orange">
-        <span class="icon">📊</span>
-        <div class="label">Terakhir Update</div>
-        <div class="value" style="font-size:16px;margin-top:14px" id="statDate">–</div>
-        <div class="sub">Waktu sinkronisasi data</div>
-      </div>
+      <h1>💰 Master Budget</h1>
+      <p>Manajemen data budget bulanan</p>
     </div>
 
     <div class="table-card">
@@ -446,11 +412,9 @@
         <div class="toolbar-left">
           <div class="search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="searchInput" placeholder="Cari item kerja atau status..." oninput="applyFilter()" />
+            <input type="text" id="searchInput" placeholder="Cari bulan..." oninput="applyFilter()" />
           </div>
-          <select class="filter-select" id="filterStatus" onchange="applyFilter()">
-            <option value="">Semua Status</option>
-          </select>
+
           <select class="filter-select" id="filterRows" onchange="applyFilter()">
             <option value="20">20 baris</option>
             <option value="50">50 baris</option>
@@ -459,8 +423,6 @@
           </select>
         </div>
         <div class="toolbar-right">
-          <button class="btn btn-import" onclick="openImport()">📥 Import Excel</button>
-          <a href="{{ route('rawat.export') }}" class="btn btn-excel" style="text-decoration:none">📥 Export Excel</a>
           <button class="btn btn-primary" onclick="openAdd()">＋ Tambah Data</button>
         </div>
       </div>
@@ -468,35 +430,11 @@
       <div class="table-wrap">
         <table id="masterTable">
           <thead><tr>
-              <th style="min-width:50px" class="sticky-col">No</th>
-              <th style="min-width:100px">SITECODE</th>
-              <th style="min-width:100px">TDATE</th>
-              <th style="min-width:100px">AFDCODE</th>
-              <th style="min-width:100px">LOCATION</th>
-              <th style="min-width:120px">PLANTINGDATE</th>
-              <th style="min-width:100px">JOBTYPE</th>
-              <th style="min-width:150px">JOBTYPEDESC</th>
-              <th style="min-width:80px">TYPE</th>
-              <th style="min-width:120px">JOBGROUPCODE</th>
-              <th style="min-width:100px">JOBCODE</th>
-              <th style="min-width:150px">JOBDESC</th>
-              <th style="min-width:80px">UOM</th>
-              <th style="min-width:80px">UMP</th>
-              <th style="min-width:120px">HECTPLANTED</th>
-              <th style="min-width:120px">MANDAYS_HI</th>
-              <th style="min-width:120px">MANDAYS_SHI</th>
-              <th style="min-width:120px">HK_PER_HA_HI</th>
-              <th style="min-width:120px">HK_PER_HA_SHI</th>
-              <th style="min-width:120px">PRODUKSI_HI</th>
-              <th style="min-width:120px">PRODUKSI_SHI</th>
-              <th style="min-width:100px">COST_HI</th>
-              <th style="min-width:100px">COST_SHI</th>
-              <th style="min-width:100px">PREMI_HI</th>
-              <th style="min-width:100px">PREMI_SHI</th>
-              <th style="min-width:120px">ADDCOST_HI</th>
-              <th style="min-width:120px">ADDCOST_SHI</th>
-              <th style="min-width:150px">STATUS</th>
-              <th style="min-width:110px">Aksi</th>
+              <th style="min-width:50px">No</th>
+              <th style="min-width:150px" class="left">BULAN</th>
+              <th style="min-width:150px">JUMLAH HK</th>
+              <th style="min-width:150px">BUDGET BULAN (Rp)</th>
+              <th style="min-width:120px">AKSI</th>
 </tr></thead>
           <tbody id="tableBody"></tbody>
         </table>
@@ -518,43 +456,13 @@
       <button class="modal-close" onclick="closeFormModal()">✕</button>
     </div>
     <div class="modal-body">
+      
       <div class="form-grid">
-        <div class="form-group"><label>SITECODE</label><input type="text" id="f_sitecode"></div>
-        <div class="form-group"><label>TDATE</label><input type="date" id="f_tdate"></div>
-        <div class="form-group"><label>AFDCODE</label><input type="text" id="f_afdcode"></div>
-        <div class="form-group"><label>LOCATION</label><input type="text" id="f_location"></div>
-        <div class="form-group"><label>PLANTINGDATE</label><input type="number" id="f_plantingdate"></div>
-        <div class="form-group"><label>JOBTYPE</label><input type="text" id="f_jobtype"></div>
-        <div class="form-group"><label>JOBTYPEDESC</label><input type="text" id="f_jobtypedesc"></div>
-        <div class="form-group"><label>TYPE</label><input type="text" id="f_type"></div>
-        <div class="form-group"><label>JOBGROUPCODE</label><input type="text" id="f_jobgroupcode"></div>
-        <div class="form-group"><label>JOBCODE</label><input type="text" id="f_jobcode"></div>
-        <div class="form-group"><label>JOBDESC</label>
-          <select id="f_jobdesc">
-            <option value="">-- Pilih Item Kerja --</option>
-            @foreach($masterItems as $item)
-              <option value="{{ $item }}">{{ $item }}</option>
-            @endforeach
-          </select>
-        </div>
-        <div class="form-group"><label>UOM</label><input type="text" id="f_uom"></div>
-        
-        <div class="form-divider">Data Angka</div>
-        <div class="form-group"><label>UMP</label><input type="number" step="0.0001" id="f_ump"></div>
-        <div class="form-group"><label>HECTPLANTED</label><input type="number" step="0.0001" id="f_hectplanted"></div>
-        <div class="form-group"><label>MANDAYS_HI</label><input type="number" step="0.0001" id="f_mandays_hi"></div>
-        <div class="form-group"><label>MANDAYS_SHI</label><input type="number" step="0.0001" id="f_mandays_shi"></div>
-        <div class="form-group"><label>HK_PER_HA_HI</label><input type="number" step="0.0001" id="f_hk_per_ha_hi"></div>
-        <div class="form-group"><label>HK_PER_HA_SHI</label><input type="number" step="0.0001" id="f_hk_per_ha_shi"></div>
-        <div class="form-group"><label>PRODUKSI_HI</label><input type="number" step="0.0001" id="f_produksi_hi"></div>
-        <div class="form-group"><label>PRODUKSI_SHI</label><input type="number" step="0.0001" id="f_produksi_shi"></div>
-        <div class="form-group"><label>COST_HI</label><input type="number" step="0.0001" id="f_cost_hi"></div>
-        <div class="form-group"><label>COST_SHI</label><input type="number" step="0.0001" id="f_cost_shi"></div>
-        <div class="form-group"><label>PREMI_HI</label><input type="number" step="0.0001" id="f_premi_hi"></div>
-        <div class="form-group"><label>PREMI_SHI</label><input type="number" step="0.0001" id="f_premi_shi"></div>
-        <div class="form-group"><label>ADDCOST_HI</label><input type="number" step="0.0001" id="f_addcost_hi"></div>
-        <div class="form-group"><label>ADDCOST_SHI</label><input type="number" step="0.0001" id="f_addcost_shi"></div>
-</div></div><div class="modal-footer">
+        <div class="form-group full"><label>Bulan</label><input type="month" id="f_bulan" required></div>
+        <div class="form-group"><label>Jumlah HK</label><input type="number" step="0.01" id="f_jumlah_hk"></div>
+        <div class="form-group"><label>Budget Bulan (Rp)</label><input type="number" step="0.01" id="f_budget_bulan_rp"></div>
+      </div>
+</div><div class="modal-footer">
       <button class="btn btn-outline" onclick="closeFormModal()">Batal</button>
       <button class="btn btn-primary" onclick="submitForm()" id="formSubmitBtn">💾 Simpan</button>
     </div>
@@ -589,7 +497,7 @@
       <h3>📥 Import Data dari Excel</h3>
       <button class="modal-close" onclick="closeImportModal()">✕</button>
     </div>
-    <form action="{{ route('rawat.import') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('master.import') }}" method="POST" enctype="multipart/form-data">
       @csrf
       <div class="modal-body">
         <div style="margin-bottom:15px">
@@ -618,29 +526,19 @@
   </div>
 </div>
 
-
-<!-- MODAL: DETAIL -->
-<div class="modal-overlay" id="detailModal">
-  <div class="modal" style="max-width:550px">
-    <div class="modal-header">
-      <h3 id="detailTitle">👁️ Detail Fluktuasi Norma</h3>
-      <button class="modal-close" onclick="closeDetailModal()">✕</button>
-    </div>
-    <div class="modal-body" style="padding-top:10px;">
-      <div id="detailContent"></div>
-    </div>
-  </div>
-</div>
-
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
 
 // ========== DATA STORE ==========
-
-let masterData = {!! $data->toJson() !!};
-let masterNormaData = {!! $masterNormaData->toJson() !!};
-
+let masterData = {!! isset($data) ? $data->map(function($item) {
+    return [
+        'id' => $item->id,
+        'bulan' => $item->bulan ?? null,
+        'jumlah_hk' => (float)($item->jumlah_hk ?? 0),
+        'budget_bulan_rp' => (float)($item->budget_bulan_rp ?? 0),
+    ];
+})->toJson() : '[]' !!};
 
 let filteredData = [];
 let currentPage = 1;
@@ -649,7 +547,7 @@ let deleteTargetId = null;
 let pendingImportData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
-  updateFilterDropdown();
+
   applyFilter();
   updateStats();
 });
@@ -658,58 +556,19 @@ function saveToStorage() {
   updateStats();
 }
 
-
-function calcStatus(r) {
-  let realisasi = 0;
-  if(r.produksi_shi && r.produksi_shi > 0) {
-    realisasi = r.mandays_shi / r.produksi_shi;
-  }
-  const master = masterNormaData.find(m => m.item_kerja === r.jobdesc);
-  const standar = master && master.datar_norma ? parseFloat(master.datar_norma) : 0;
-  
-  let fluktuasi = 0;
-  if (standar > 0) {
-    fluktuasi = ((realisasi - standar) / standar) * 100;
-  }
-  
-  let statusText = 'Normal';
-  let badgeCls = 'badge-success';
-  if (fluktuasi > 100) {
-    statusText = 'Over Norma';
-    badgeCls = 'badge-danger';
-  } else if (fluktuasi < 0) {
-    statusText = 'Di Bawah Norma';
-    badgeCls = 'badge-info';
-  }
-  if (!standar) {
-    statusText = 'N/A';
-    badgeCls = 'badge-tmtua';
-  }
-  return { statusText, badgeCls, fluktuasi, realisasi, standar };
-}
-
 // ========== FILTER ==========
 function applyFilter() {
   const q = document.getElementById('searchInput').value.toLowerCase().trim();
-  const s = document.getElementById('filterStatus').value;
   filteredData = masterData.filter(r => {
-    const st = calcStatus(r);
-    const matchQ = !q || (r.jobdesc||'').toLowerCase().includes(q) || (r.sitecode||'').toLowerCase().includes(q) || (r.location||'').toLowerCase().includes(q);
-    const matchS = !s || st.statusText === s;
-    return matchQ && matchS;
+    if (q && !(r.bulan || '').toLowerCase().includes(q)) return false;
+    return true;
   });
   currentPage = 1;
   renderTable();
   updateStats();
 }
 
-function updateFilterDropdown() {
-  const sel = document.getElementById('filterStatus');
-  const cur = sel.value;
-  const statuses = ['Over Norma', 'Normal', 'Di Bawah Norma', 'N/A'];
-  sel.innerHTML = '<option value="">Semua Status</option>' +
-    statuses.map(s => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
-}
+
 
 // ========== RENDER ==========
 function renderTable() {
@@ -722,7 +581,7 @@ function renderTable() {
   const tbody = document.getElementById('tableBody');
 
   if (!page.length) {
-    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">
       <div class="icon">📭</div><h3>Tidak ada data</h3>
       <p>Coba ubah filter atau tambahkan data baru</p>
     </div></td></tr>`;
@@ -732,48 +591,23 @@ function renderTable() {
   }
 
   const fmt = v => (v===null||v===undefined||v==='') ? '<span style="color:var(--text-3)">–</span>'
-    : `<span class="num-cell">${!isNaN(Number(v)) ? numFmt(Number(v)) : v}</span>`;
+    : `<span class="num-cell">${typeof v==='number'?numFmt(v):v}</span>`;
   const fmtA = v => (v===null||v===undefined||v==='') ? '<span style="color:var(--text-3)">–</span>'
-    : `<span class="num-cell accent">${!isNaN(Number(v)) ? numFmt(Number(v)) : v}</span>`;
+    : `<span class="num-cell accent">${typeof v==='number'?numFmt(v):v}</span>`;
 
-        tbody.innerHTML = page.map((r, i) => {
+  tbody.innerHTML = page.map((row, i) => {
+    const dateObj = new Date(row.bulan);
+    const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const monthName = months[dateObj.getMonth()];
     
-    const st = calcStatus(r);
-    const statusCol = `<span class="badge-status ${st.badgeCls}">${st.statusText}</span><br><small style="color:var(--text-3);font-size:10px">${st.fluktuasi.toFixed(1)}%</small>`;
-
     return `<tr>
-      <td class="sticky-col" style="text-align:center">${start + i + 1}</td>
-      <td>${r.sitecode||'-'}</td>
-      <td style="white-space:nowrap">${r.tdate||'-'}</td>
-      <td>${r.afdcode||'-'}</td>
-      <td>${r.location||'-'}</td>
-      <td>${r.plantingdate||'-'}</td>
-      <td>${r.jobtype||'-'}</td>
-      <td>${r.jobtypedesc||'-'}</td>
-      <td>${r.type||'-'}</td>
-      <td>${r.jobgroupcode||'-'}</td>
-      <td>${r.jobcode||'-'}</td>
-      <td>${r.jobdesc||'-'}</td>
-      <td>${r.uom||'-'}</td>
-      <td>${fmt(r.ump)}</td>
-      <td>${fmt(r.hectplanted)}</td>
-      <td>${fmt(r.mandays_hi)}</td>
-      <td>${fmt(r.mandays_shi)}</td>
-      <td>${fmt(r.hk_per_ha_hi)}</td>
-      <td>${fmt(r.hk_per_ha_shi)}</td>
-      <td>${fmt(r.produksi_hi)}</td>
-      <td>${fmt(r.produksi_shi)}</td>
-      <td>${fmt(r.cost_hi)}</td>
-      <td>${fmt(r.cost_shi)}</td>
-      <td>${fmt(r.premi_hi)}</td>
-      <td>${fmt(r.premi_shi)}</td>
-      <td>${fmt(r.addcost_hi)}</td>
-      <td>${fmt(r.addcost_shi)}</td>
-      <td>${statusCol}</td>
+      <td>${start + i + 1}</td>
+      <td class="left" style="font-weight:600">${monthName ? (monthName.toUpperCase() + ' ' + dateObj.getFullYear()) : (row.bulan || '-')}</td>
+      <td class="num-cell">${row.jumlah_hk !== null ? numFmt(row.jumlah_hk) : '–'}</td>
+      <td class="num-cell accent">${row.budget_bulan_rp !== null ? moneyFmt(row.budget_bulan_rp) : '–'}</td>
       <td><div style="display:flex;gap:6px;justify-content:center">
-        <button class="btn btn-primary" style="padding:5px 8px;font-size:11px" onclick="openDetail(${r.id})" title="Lihat Detail">👁️ Detail</button>
-        <button class="btn btn-edit-sm" onclick="openEdit(${r.id})" title="Edit">✏️</button>
-        <button class="btn btn-danger-sm" onclick="openDelete(${r.id})" title="Hapus">🗑️</button>
+        <button class="btn btn-edit-sm" onclick="openEdit(${row.id})" title="Edit">✏️ Edit</button>
+        <button class="btn btn-danger-sm" onclick="openDelete(${row.id})" title="Hapus">🗑️</button>
       </div></td>
     </tr>`;
   }).join('');
@@ -794,10 +628,11 @@ function renderTable() {
 }
 
 function numFmt(v) {
-  const n = Number(v);
-  if (isNaN(n)) return v;
-  if (Number.isInteger(n)) return n.toString();
-  return n.toFixed(2);
+  if (Number.isInteger(v)) return v.toString();
+  return parseFloat(v.toFixed(4)).toString();
+}
+function moneyFmt(v) {
+  return new Intl.NumberFormat('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
 }
 function pageRange(cur, total) {
   if (total<=7) return Array.from({length:total},(_,i)=>i+1);
@@ -815,154 +650,34 @@ function goPage(p) {
   currentPage=p; renderTable();
 }
 
+// ========== STATS ==========
 function updateStats() {
   document.getElementById('statTotal').textContent = masterData.length;
-  document.getElementById('statStatus').textContent = new Set(masterData.map(r=>r.jobtype).filter(Boolean)).size;
-  document.getElementById('statItems').textContent = new Set(masterData.map(r=>r.jobdesc).filter(Boolean)).size;
-}
-
-
-function closeDetailModal() {
-  document.getElementById('detailModal').classList.remove('open');
-}
-
-function openDetail(id) {
-  const r = masterData.find(x => x.id === id);
-  if(!r) return;
-  
-  let realisasi = 0;
-  if(r.produksi_shi && r.produksi_shi > 0) {
-    realisasi = r.mandays_shi / r.produksi_shi;
-  }
-  
-  const master = masterNormaData.find(m => m.item_kerja === r.jobdesc);
-  const standar = master && master.datar_norma ? parseFloat(master.datar_norma) : 0;
-  
-  let fluktuasi = 0;
-  if (standar > 0) {
-    fluktuasi = ((realisasi - standar) / standar) * 100;
-  }
-  
-  let statusText = 'Normal';
-  let badgeCls = 'badge-success';
-  if (fluktuasi > 100) {
-    statusText = 'Over Norma';
-    badgeCls = 'badge-danger';
-  } else if (fluktuasi < 0) {
-    statusText = 'Di Bawah Norma';
-    badgeCls = 'badge-info';
-  }
-  if (!standar) {
-      statusText = 'N/A';
-      badgeCls = 'badge-tmtua';
-  }
-  
-  const content = `
-    <div style="background:var(--bg-deep); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
-      <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-        <span style="color:var(--text-3); font-size:12px;">JOBDESC</span>
-        <strong style="color:var(--text-1)">${r.jobdesc || '-'}</strong>
-      </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-        <span style="color:var(--text-3); font-size:12px;">MANDAYS_SHI</span>
-        <strong style="color:var(--text-1)">${numFmt(r.mandays_shi || 0)}</strong>
-      </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-        <span style="color:var(--text-3); font-size:12px;">PRODUKSI_SHI</span>
-        <strong style="color:var(--text-1)">${numFmt(r.produksi_shi || 0)}</strong>
-      </div>
-    </div>
-    
-    <div style="background:var(--bg-deep); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
-      <h4 style="font-size:13px; margin-bottom:10px; color:var(--text-2);">Rumus Perhitungan:</h4>
-      <p style="font-size:13px; color:var(--text-1); margin-bottom:8px;">
-        <strong>Realisasi:</strong> MANDAYS_SHI / PRODUKSI_SHI<br>
-        = ${numFmt(r.mandays_shi || 0)} / ${numFmt(r.produksi_shi || 0)} <br>
-        = <span style="color:var(--accent-l)">${realisasi.toFixed(2)}</span>
-      </p>
-      <p style="font-size:13px; color:var(--text-1); margin-bottom:8px;">
-        <strong>Norma Standar (Master Datar):</strong><br>
-        = <span style="color:var(--info)">${standar.toFixed(2)}</span>
-      </p>
-      <hr style="border-color:var(--border); margin:12px 0;">
-      <p style="font-size:13px; color:var(--text-1); line-height:1.6">
-        <strong>Fluktuasi:</strong> ((Realisasi - Standar) / Standar) * 100% <br>
-        = ((${realisasi.toFixed(2)} - ${standar.toFixed(2)}) / ${standar.toFixed(2)}) * 100% <br>
-        = <strong>${fluktuasi.toFixed(2)}%</strong>
-      </p>
-    </div>
-    
-    <div style="text-align:center; padding:12px;">
-      <div style="font-size:12px; color:var(--text-3); margin-bottom:6px;">KESIMPULAN STATUS</div>
-      <span class="badge-status ${badgeCls}" style="font-size:16px; padding:6px 16px;">${statusText}</span>
-    </div>
-  `;
-  document.getElementById('detailContent').innerHTML = content;
-  document.getElementById('detailModal').classList.add('open');
+  // Other stats not applicable anymore, leaving at 0
 }
 
 // ========== CRUD: ADD/EDIT ==========
-
 function openAdd() {
   editingId=null;
-  document.getElementById('formModalTitle').textContent='➕ Tambah Data Norma';
+  document.getElementById('formModalTitle').textContent='➕ Tambah Budget';
   document.getElementById('formSubmitBtn').textContent='💾 Simpan';
-  
-  const fields = [
-    'f_sitecode','f_tdate','f_afdcode','f_location','f_plantingdate',
-    'f_jobtype','f_jobtypedesc','f_type','f_jobgroupcode','f_jobcode',
-    'f_jobdesc','f_uom','f_ump','f_hectplanted','f_mandays_hi',
-    'f_mandays_shi','f_hk_per_ha_hi','f_hk_per_ha_shi','f_produksi_hi',
-    'f_produksi_shi','f_cost_hi','f_cost_shi','f_premi_hi','f_premi_shi',
-    'f_addcost_hi','f_addcost_shi'
-  ];
-  
-  fields.forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.value='';
+  ['f_bulan','f_jumlah_hk','f_budget_bulan_rp'].forEach(id=>{
+    document.getElementById(id).value='';
   });
-  
   document.getElementById('formModal').classList.add('open');
 }
-
 
 function openEdit(id) {
   const row = masterData.find(r=>r.id===id);
   if(!row) return;
   editingId=id;
-  document.getElementById('formModalTitle').textContent='✏️ Edit Data Norma';
+  document.getElementById('formModalTitle').textContent='✏️ Edit Budget';
   document.getElementById('formSubmitBtn').textContent='💾 Update';
-  
-  document.getElementById('f_sitecode').value = row.sitecode||'';
-  document.getElementById('f_tdate').value = row.tdate||'';
-  document.getElementById('f_afdcode').value = row.afdcode||'';
-  document.getElementById('f_location').value = row.location||'';
-  document.getElementById('f_plantingdate').value = row.plantingdate||'';
-  document.getElementById('f_jobtype').value = row.jobtype||'';
-  document.getElementById('f_jobtypedesc').value = row.jobtypedesc||'';
-  document.getElementById('f_type').value = row.type||'';
-  document.getElementById('f_jobgroupcode').value = row.jobgroupcode||'';
-  document.getElementById('f_jobcode').value = row.jobcode||'';
-  document.getElementById('f_jobdesc').value = row.jobdesc||'';
-  document.getElementById('f_uom').value = row.uom||'';
-  document.getElementById('f_ump').value = row.ump??'';
-  document.getElementById('f_hectplanted').value = row.hectplanted??'';
-  document.getElementById('f_mandays_hi').value = row.mandays_hi??'';
-  document.getElementById('f_mandays_shi').value = row.mandays_shi??'';
-  document.getElementById('f_hk_per_ha_hi').value = row.hk_per_ha_hi??'';
-  document.getElementById('f_hk_per_ha_shi').value = row.hk_per_ha_shi??'';
-  document.getElementById('f_produksi_hi').value = row.produksi_hi??'';
-  document.getElementById('f_produksi_shi').value = row.produksi_shi??'';
-  document.getElementById('f_cost_hi').value = row.cost_hi??'';
-  document.getElementById('f_cost_shi').value = row.cost_shi??'';
-  document.getElementById('f_premi_hi').value = row.premi_hi??'';
-  document.getElementById('f_premi_shi').value = row.premi_shi??'';
-  document.getElementById('f_addcost_hi').value = row.addcost_hi??'';
-  document.getElementById('f_addcost_shi').value = row.addcost_shi??'';
-  
+  document.getElementById('f_bulan').value = row.bulan ? row.bulan.substring(0,7) : '';
+  document.getElementById('f_jumlah_hk').value = row.jumlah_hk??'';
+  document.getElementById('f_budget_bulan_rp').value = row.budget_bulan_rp??'';
   document.getElementById('formModal').classList.add('open');
 }
-
 
 function closeFormModal() {
   document.getElementById('formModal').classList.remove('open');
@@ -970,50 +685,20 @@ function closeFormModal() {
 }
 
 
-
 async function submitForm() {
-  const sitecode = document.getElementById('f_sitecode').value.trim();
-  const location = document.getElementById('f_location').value.trim();
-  if(!sitecode) { showToast('error','SITECODE wajib diisi!'); return; }
-  
-  const parseFloatSafe = (val) => {
-     const p = parseFloat(val);
-     return isNaN(p) ? null : p;
-  };
+  const bulan = document.getElementById('f_bulan').value;
+  if(!bulan) { showToast('error','Bulan wajib diisi!'); return; }
 
   const obj = {
-    sitecode: sitecode,
-    tdate: document.getElementById('f_tdate').value||null,
-    afdcode: document.getElementById('f_afdcode').value,
-    location: location,
-    plantingdate: parseInt(document.getElementById('f_plantingdate').value)||null,
-    jobtype: document.getElementById('f_jobtype').value,
-    jobtypedesc: document.getElementById('f_jobtypedesc').value,
-    type: document.getElementById('f_type').value,
-    jobgroupcode: document.getElementById('f_jobgroupcode').value,
-    jobcode: document.getElementById('f_jobcode').value,
-    jobdesc: document.getElementById('f_jobdesc').value,
-    uom: document.getElementById('f_uom').value,
-    ump: parseFloatSafe(document.getElementById('f_ump').value),
-    hectplanted: parseFloatSafe(document.getElementById('f_hectplanted').value),
-    mandays_hi: parseFloatSafe(document.getElementById('f_mandays_hi').value),
-    mandays_shi: parseFloatSafe(document.getElementById('f_mandays_shi').value),
-    hk_per_ha_hi: parseFloatSafe(document.getElementById('f_hk_per_ha_hi').value),
-    hk_per_ha_shi: parseFloatSafe(document.getElementById('f_hk_per_ha_shi').value),
-    produksi_hi: parseFloatSafe(document.getElementById('f_produksi_hi').value),
-    produksi_shi: parseFloatSafe(document.getElementById('f_produksi_shi').value),
-    cost_hi: parseFloatSafe(document.getElementById('f_cost_hi').value),
-    cost_shi: parseFloatSafe(document.getElementById('f_cost_shi').value),
-    premi_hi: parseFloatSafe(document.getElementById('f_premi_hi').value),
-    premi_shi: parseFloatSafe(document.getElementById('f_premi_shi').value),
-    addcost_hi: parseFloatSafe(document.getElementById('f_addcost_hi').value),
-    addcost_shi: parseFloatSafe(document.getElementById('f_addcost_shi').value)
+    bulan: bulan + '-01',
+    jumlah_hk: parseFloat(document.getElementById('f_jumlah_hk').value)||0,
+    budget_bulan_rp: parseFloat(document.getElementById('f_budget_bulan_rp').value)||0
   };
 
   const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-  const url = editingId ? '/norma-rawat/' + editingId : '/norma-rawat';
+  const url = editingId ? '/master-budget/' + editingId : '/master-budget';
   const method = editingId ? 'PUT' : 'POST';
-
+  
   const btn = document.getElementById('formSubmitBtn');
   const originalText = btn.innerHTML;
   btn.innerHTML = '⏳ Menyimpan...';
@@ -1031,7 +716,7 @@ async function submitForm() {
     });
     if(res.ok) {
       showToast('success', editingId ? 'Data berhasil diperbarui ✓' : 'Data berhasil ditambahkan ✓');
-      setTimeout(() => window.location.reload(), 1000);
+      setTimeout(() => location.reload(), 1000);
     } else {
       showToast('error', 'Gagal menyimpan data');
       btn.innerHTML = originalText;
@@ -1044,13 +729,12 @@ async function submitForm() {
   }
 }
 
-
 // ========== CRUD: DELETE ==========
 function openDelete(id) {
   const row = masterData.find(r=>r.id===id);
   if(!row) return;
   deleteTargetId=id;
-  document.getElementById('deleteItemName').textContent=`${row.sitecode} - ${row.location}`;
+  document.getElementById('deleteItemName').textContent=`${row.status_umur} – ${row.item_kerja}`;
   document.getElementById('deleteModal').classList.add('open');
 }
 function closeDeleteModal() { document.getElementById('deleteModal').classList.remove('open'); deleteTargetId=null; }
@@ -1063,9 +747,9 @@ async function confirmDelete() {
   const originalText = btn.innerHTML;
   btn.innerHTML = '⏳ Menghapus...';
   btn.disabled = true;
-  
+
   try {
-    const res = await fetch('/norma-rawat/' + deleteTargetId, {
+    const res = await fetch('/master-budget/' + deleteTargetId, {
       method: 'DELETE',
       headers: {
         'X-CSRF-TOKEN': csrf,
@@ -1111,9 +795,7 @@ function exportExcel() {
 }
 
 // ========== IMPORT ==========
-function openImport() {
-  document.getElementById('importModal').classList.add('open');
-}
+
 function closeImportModal() { document.getElementById('importModal').classList.remove('open'); }
 
 // ========== TOAST ==========

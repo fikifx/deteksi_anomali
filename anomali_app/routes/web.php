@@ -20,6 +20,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/master-norma/import', [NormaKerjaController::class, 'import'])->name('master.import');
     Route::get('/master-norma/export', [NormaKerjaController::class, 'export'])->name('master.export');
 
+    Route::get('/master-budget', [\App\Http\Controllers\MasterBudgetController::class, 'index'])->name('budget.index');
+    Route::post('/master-budget', [\App\Http\Controllers\MasterBudgetController::class, 'store'])->name('budget.store');
+    Route::put('/master-budget/{id}', [\App\Http\Controllers\MasterBudgetController::class, 'update'])->name('budget.update');
+    Route::delete('/master-budget/{id}', [\App\Http\Controllers\MasterBudgetController::class, 'destroy'])->name('budget.destroy');
+
     Route::get('/norma-rawat', [\App\Http\Controllers\NormaRawatController::class, 'index'])->name('rawat.index');
     Route::post('/norma-rawat', [\App\Http\Controllers\NormaRawatController::class, 'store'])->name('rawat.store');
     Route::put('/norma-rawat/{id}', [\App\Http\Controllers\NormaRawatController::class, 'update'])->name('rawat.update');

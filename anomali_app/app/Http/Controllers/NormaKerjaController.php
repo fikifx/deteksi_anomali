@@ -85,10 +85,28 @@ class NormaKerjaController extends Controller
 
     public function overview()
     {
+        // Data for Live Alert Feed
         $rawatData = \App\Models\NormaRawat::where('created_at', '>=', \Carbon\Carbon::now()->subMonth())
             ->orderBy('created_at', 'desc')
             ->get();
+            
         $masterNorma = \App\Models\NormaKerja::all();
-        return view('dashboard', compact('rawatData', 'masterNorma'));
+        
+        // Find June budget (or current month)
+        $juneBudget = \App\Models\MasterBudget::whereMonth('bulan', 6)->sum('budget_bulan_rp');
+        
+        // Calculate realization from Live Alert Feed (for this month/June)
+        // HK Price is 158680
+        $hkPrice = 158680;
+        $totalRealisasi = 0;
+        foreach ($rawatData as $rawat) {
+            $mandays = (float) ($rawat->mandays_shi ?? 0);
+            $totalRealisasi += $mandays * $hkPrice;
+        }
+        
+        $sisaBudget = $juneBudget - $totalRealisasi;
+        $masterBudget = \App\Models\MasterBudget::orderBy('bulan', 'asc')->get();
+
+        return view('dashboard', compact('rawatData', 'masterNorma', 'juneBudget', 'totalRealisasi', 'sisaBudget', 'masterBudget'));
     }
 }

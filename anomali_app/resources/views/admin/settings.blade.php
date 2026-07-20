@@ -363,6 +363,9 @@
     <a href="{{ route('master.index') }}" class="nav-item {{ request()->routeIs('master.index') ? 'active' : '' }}">
       <span class="icon">📋</span> Master Data Norma
     </a>
+    <a href="{{ route('budget.index') }}" class="nav-item {{ request()->routeIs('budget.index') ? 'active' : '' }}">
+      <span class="icon">💰</span> Master Budget
+    </a>
     <a href="{{ route('rawat.index') }}" class="nav-item {{ request()->routeIs('rawat.index') ? 'active' : '' }}">
       <span class="icon">🌱</span> Data Norma Rawat
     </a>
