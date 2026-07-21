@@ -140,7 +140,7 @@
     }
     .toolbar-left { display:flex; align-items:center; gap:10px; flex:1; flex-wrap:wrap; }
     .toolbar-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-    .search-box { position:relative; width:280px; }
+    .search-box { position:relative; width:200px; }
     .search-box input {
       width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--border);
       border-radius:10px; padding:9px 12px 9px 38px;
@@ -401,12 +401,21 @@
         <div class="value" id="statItems">0</div>
         <div class="sub">Jenis pekerjaan berbeda</div>
       </div>
+      @if(auth()->user()->role == 'Asisten Afdeling')
+      <div class="stat-card orange" style="cursor:pointer" onclick="filterBelumKlarifikasi()">
+        <span class="icon">⚠️</span>
+        <div class="label">Belum di Klarifikasi</div>
+        <div class="value" style="font-size:30px; margin:8px 0 4px;" id="statKlarifikasi">0</div>
+        <div class="sub">Status Over Norma</div>
+      </div>
+      @else
       <div class="stat-card orange">
         <span class="icon">📊</span>
         <div class="label">Terakhir Update</div>
         <div class="value" style="font-size:16px;margin-top:14px" id="statDate">–</div>
         <div class="sub">Waktu sinkronisasi data</div>
       </div>
+      @endif
     </div>
 
     <div class="table-card">
@@ -414,22 +423,22 @@
         <div class="toolbar-left">
           <div class="search-box">
             <span class="search-icon">🔍</span>
-            <input type="text" id="searchInput" placeholder="Cari item kerja atau status..." oninput="applyFilter()" />
+            <input type="text" id="searchInput" placeholder="Cari data..." oninput="applyFilter()" />
           </div>
-          <select class="filter-select" id="filterStatus" onchange="applyFilter()">
-            <option value="">Semua Status</option>
+          <select class="filter-select" id="filterStatus" style="width: 130px;" onchange="applyFilter()">
+            <option value="">Status</option>
           </select>
           <select class="filter-select" id="filterRows" onchange="applyFilter()">
-            <option value="20">20 baris</option>
-            <option value="50">50 baris</option>
-            <option value="100">100 baris</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
             <option value="0">Semua</option>
           </select>
         </div>
         <div class="toolbar-right">
-          <button class="btn btn-import" onclick="openImport()">📥 Import Excel</button>
-          <a href="{{ route('rawat.export') }}" class="btn btn-excel" style="text-decoration:none">📥 Export Excel</a>
-          <button class="btn btn-primary" onclick="openAdd()">＋ Tambah Data</button>
+          <button class="btn btn-import" onclick="openImport()">📥 Impor</button>
+          <a href="{{ route('rawat.export') }}" class="btn btn-excel" style="text-decoration:none">📥 Export</a>
+          <button class="btn btn-primary" onclick="openAdd()">＋ Tambah</button>
         </div>
       </div>
 
@@ -464,6 +473,7 @@
               <th style="min-width:120px">ADDCOST_HI</th>
               <th style="min-width:120px">ADDCOST_SHI</th>
               <th style="min-width:150px">STATUS</th>
+              <th style="min-width:200px">KLARIFIKASI</th>
               <th style="min-width:110px">Aksi</th>
 </tr></thead>
           <tbody id="tableBody"></tbody>
@@ -600,6 +610,28 @@
   </div>
 </div>
 
+</div>
+
+<!-- MODAL: KLARIFIKASI -->
+<div class="modal-overlay" id="klarifikasiModal">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header">
+      <h3>💬 Klarifikasi Over Norma</h3>
+      <button class="modal-close" onclick="closeKlarifikasiModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group full">
+        <label>Keterangan / Klarifikasi</label>
+        <textarea id="f_klarifikasi" rows="5" style="background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:10px; padding:10px 14px; color:var(--text-1); font-size:13.5px; font-family:inherit; outline:none; transition:.2s; width:100%; resize:vertical;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeKlarifikasiModal()">Batal</button>
+      <button class="btn btn-primary" onclick="submitKlarifikasi()" id="klarifikasiSubmitBtn">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
 
 <script>
@@ -664,7 +696,13 @@ function applyFilter() {
     const st = calcStatus(r);
     const matchQ = !q || (r.jobdesc||'').toLowerCase().includes(q) || (r.sitecode||'').toLowerCase().includes(q) || (r.location||'').toLowerCase().includes(q);
     const matchS = !s || st.statusText === s;
-    return matchQ && matchS;
+    
+    let matchKlarifikasi = true;
+    if (typeof isFilterBelumKlarifikasi !== 'undefined' && isFilterBelumKlarifikasi) {
+        matchKlarifikasi = (st.fluktuasi > 100 && !r.klarifikasi);
+    }
+    
+    return matchQ && matchS && matchKlarifikasi;
   });
   currentPage = 1;
   renderTable();
@@ -675,7 +713,7 @@ function updateFilterDropdown() {
   const sel = document.getElementById('filterStatus');
   const cur = sel.value;
   const statuses = ['Over Norma', 'Normal', 'Di Bawah Norma', 'N/A'];
-  sel.innerHTML = '<option value="">Semua Status</option>' +
+  sel.innerHTML = '<option value="">Status</option>' +
     statuses.map(s => `<option value="${s}" ${s===cur?'selected':''}>${s}</option>`).join('');
 }
 
@@ -738,10 +776,15 @@ function renderTable() {
       <td>${fmt(r.addcost_hi)}</td>
       <td>${fmt(r.addcost_shi)}</td>
       <td>${statusCol}</td>
+      <td style="white-space:normal;text-align:left;font-size:12px;line-height:1.4">${r.klarifikasi || '<em style="color:var(--text-3)">Belum ada klarifikasi</em>'}</td>
       <td><div style="display:flex;gap:6px;justify-content:center">
         <button class="btn btn-primary" style="padding:5px 8px;font-size:11px" onclick="openDetail(${r.id})" title="Lihat Detail">👁️ Detail</button>
-        <button class="btn btn-edit-sm" onclick="openEdit(${r.id})" title="Edit">✏️</button>
-        <button class="btn btn-danger-sm" onclick="openDelete(${r.id})" title="Hapus">🗑️</button>
+        @if(auth()->user()->role == 'Asisten Afdeling')
+          ${st.fluktuasi > 100 ? `<button class="btn" style="background:rgba(255,179,71,0.12); color:var(--warning); border:1px solid rgba(255,179,71,0.22); padding:6px 12px; font-size:12px;" onclick="openKlarifikasi(${r.id})" title="Klarifikasi">💬</button>` : ''}
+        @else
+          <button class="btn btn-edit-sm" onclick="openEdit(${r.id})" title="Edit">✏️</button>
+          <button class="btn btn-danger-sm" onclick="openDelete(${r.id})" title="Hapus">🗑️</button>
+        @endif
       </div></td>
     </tr>`;
   }).join('');
@@ -785,6 +828,21 @@ function updateStats() {
   document.getElementById('statTotal').textContent = masterData.length;
   document.getElementById('statStatus').textContent = new Set(masterData.map(r=>r.jobtype).filter(Boolean)).size;
   document.getElementById('statItems').textContent = new Set(masterData.map(r=>r.jobdesc).filter(Boolean)).size;
+  
+  const elKlarifikasi = document.getElementById('statKlarifikasi');
+  if(elKlarifikasi) {
+    const countBelumKlarifikasi = masterData.filter(r => {
+      const st = calcStatus(r);
+      return st.fluktuasi > 100 && !r.klarifikasi;
+    }).length;
+    elKlarifikasi.textContent = countBelumKlarifikasi;
+  }
+}
+
+let isFilterBelumKlarifikasi = false;
+function filterBelumKlarifikasi() {
+  isFilterBelumKlarifikasi = !isFilterBelumKlarifikasi;
+  applyFilter();
 }
 
 
@@ -1093,8 +1151,55 @@ function showToast(type,msg) {
   setTimeout(()=>{t.style.transition='opacity .4s';t.style.opacity='0';setTimeout(()=>t.remove(),400);},3500);
 }
 
+// ========== KLARIFIKASI ==========
+function openKlarifikasi(id) {
+  const row = masterData.find(r=>r.id===id);
+  if(!row) return;
+  editingId = id;
+  document.getElementById('f_klarifikasi').value = row.klarifikasi || '';
+  document.getElementById('klarifikasiModal').classList.add('open');
+}
+function closeKlarifikasiModal() {
+  document.getElementById('klarifikasiModal').classList.remove('open');
+  editingId = null;
+}
+async function submitKlarifikasi() {
+  const klarifikasi = document.getElementById('f_klarifikasi').value.trim();
+  if(!klarifikasi) { showToast('error', 'Klarifikasi wajib diisi!'); return; }
+  
+  const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  const btn = document.getElementById('klarifikasiSubmitBtn');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳ Menyimpan...';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/norma-rawat/' + editingId, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrf,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ klarifikasi: klarifikasi })
+    });
+    if(res.ok) {
+      showToast('success', 'Klarifikasi berhasil disimpan');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showToast('error', 'Gagal menyimpan klarifikasi');
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
+  } catch(e) {
+    showToast('error', 'Terjadi kesalahan sistem');
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }
+}
+
 // Close on overlay click
-['formModal','deleteModal','importModal'].forEach(id=>{
+['formModal','deleteModal','importModal','klarifikasiModal'].forEach(id=>{
   document.getElementById(id).addEventListener('click',function(e){
     if(e.target===this) this.classList.remove('open');
   });
