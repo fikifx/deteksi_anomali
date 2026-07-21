@@ -839,12 +839,12 @@
     <div style="display:flex; gap:16px; align-items:center;">
       <div class="clock" style="text-align:right">Update terakhir<br><span>{{ date('d M Y, H:i') }} WIB</span></div>
       @auth
-        <a href="{{ route('master.index') }}" class="nav-item {{ request()->routeIs('master.index') ? 'active' : '' }}">
-      <span class="icon">📋</span> Master Data Norma
-    </a>
-    <a href="{{ route('budget.index') }}" class="nav-item {{ request()->routeIs('budget.index') ? 'active' : '' }}">
-      <span class="icon">💰</span> Master Budget
-    </a>
+        <a href="{{ route('master.index') }}" style="background:transparent; border:1px solid rgba(155, 114, 203, 0.4); color:var(--text); text-decoration:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; transition:0.2s; display:flex; align-items:center; gap:6px;">
+          <span class="icon">📋</span> Master Data Norma
+        </a>
+        <a href="{{ route('budget.index') }}" style="background:transparent; border:1px solid rgba(155, 114, 203, 0.4); color:var(--text); text-decoration:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; transition:0.2s; display:flex; align-items:center; gap:6px;">
+          <span class="icon">💰</span> Master Budget
+        </a>
       @else
         <a href="{{ route('login') }}"
           style="background:transparent; border:1px solid var(--accent); color:var(--accent); text-decoration:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600;">Login
