@@ -1,37 +1,84 @@
+import os
 import re
 
-sidebar_correct = '''  <nav class="sidebar-nav">
-    <div class="nav-section-label">Navigasi</div>
-    <a href="{{ route('dashboard') }}" class="nav-item">
-      <span class="icon">📊</span> Dashboard Overview
-    </a>
-    <a href="{{ route('master.index') }}" class="nav-item {{ request()->routeIs('master.index') ? 'active' : '' }}">
-      <span class="icon">📋</span> Master Data Norma
-    </a>
-    <a href="{{ route('rawat.index') }}" class="nav-item {{ request()->routeIs('rawat.index') ? 'active' : '' }}">
-      <span class="icon">🌱</span> Data Norma Rawat
-    </a>
-    <div class="nav-section-label" style="margin-top:12px">Laporan</div>
-    <a href="#" class="nav-item"><span class="icon">📈</span> Analisis Anggaran</a>
-    <a href="#" class="nav-item"><span class="icon">🔍</span> Deteksi Anomali</a>
-    <a href="#" class="nav-item"><span class="icon">🗓️</span> Rencana Kerja</a>
-    <div class="nav-section-label" style="margin-top:12px">Pengaturan</div>
-    <a href="#" class="nav-item"><span class="icon">⚙️</span> Konfigurasi</a>
-    <a href="#" class="nav-item"><span class="icon">👥</span> Pengguna</a>
-  </nav>'''
-
 files = [
-    r'D:\deteksi_anomali\anomali_app\resources\views\admin\master.blade.php',
-    r'D:\deteksi_anomali\anomali_app\resources\views\admin\norma_rawat.blade.php'
+    'd:/deteksi_anomali/anomali_app/resources/views/admin/master.blade.php',
+    'd:/deteksi_anomali/anomali_app/resources/views/admin/norma_rawat.blade.php',
+    'd:/deteksi_anomali/anomali_app/resources/views/admin/settings.blade.php',
+    'd:/deteksi_anomali/anomali_app/resources/views/admin/users.blade.php'
 ]
 
-for f in files:
-    with open(f, 'r', encoding='utf-8') as file:
-        content = file.read()
+css_to_add = """
+    /* MOBILE RESPONSIVE SIDEBAR */
+    .mobile-menu-btn {
+      display: none;
+      background: none; border: none; color: var(--text-1); font-size: 24px; cursor: pointer;
+      margin-right: 12px;
+    }
+    .sidebar-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
+      z-index: 95; display: none; opacity: 0; transition: opacity 0.3s;
+    }
+    .sidebar-overlay.show { display: block; opacity: 1; }
     
-    content = re.sub(r'<nav class="sidebar-nav">.*?</nav>', sidebar_correct, content, flags=re.DOTALL)
-    
-    with open(f, 'w', encoding='utf-8') as file:
-        file.write(content)
+    @media(max-width:768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      .main-wrap { margin-left: 0; }
+      .mobile-menu-btn { display: block; }
+      .form-grid { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+      .topbar { padding: 0 16px; }
+    }
+"""
 
-print('Fixed sidebars')
+js_to_add = """
+<script>
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    if (sidebar.classList.contains('show')) {
+      sidebar.classList.remove('show');
+      overlay.classList.remove('show');
+    } else {
+      sidebar.classList.add('show');
+      overlay.classList.add('show');
+    }
+  }
+</script>
+"""
+
+for file_path in files:
+    if not os.path.exists(file_path):
+        continue
+        
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+        
+    # Prevent duplicate additions
+    if 'MOBILE RESPONSIVE SIDEBAR' in content:
+        print(f"Skipping {os.path.basename(file_path)} (already applied)")
+        continue
+
+    # 1. Add CSS
+    # find the existing media query and replace/append
+    content = content.replace('@media(max-width:768px) { .main-wrap { margin-left:0; } .form-grid { grid-template-columns:1fr; } .content { padding:16px; } }', css_to_add)
+    
+    # 2. Add Overlay before sidebar
+    content = content.replace('<aside class="sidebar">', '<div class="sidebar-overlay" onclick="toggleSidebar()"></div>\n<aside class="sidebar">')
+    
+    # 3. Add mobile button in topbar
+    content = content.replace('<div class="breadcrumb">', '<button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>\n    <div class="breadcrumb">')
+    
+    # 4. Add JS at the end before </body>
+    content = content.replace('</body>', js_to_add + '\n</body>')
+    
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+        
+    print(f"Fixed {os.path.basename(file_path)}")

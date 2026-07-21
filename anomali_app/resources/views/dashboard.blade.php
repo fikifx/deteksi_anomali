@@ -496,7 +496,13 @@
       display: flex;
     }
 
+    .modal::-webkit-scrollbar {
+      display: none;
+    }
+
     .modal {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 16px;
@@ -825,7 +831,7 @@
   @endphp
   <div class="header">
     <div class="title-block">
-      <h1>🧭 ANOMALI — Sistem Deteksi Dini Cost &amp; Norma <span class="live-badge"><span class="dot"></span>LIVE
+      <h1>🧭 Sistem Deteksi Dini Cost &amp; Norma <span class="live-badge"><span class="dot"></span>LIVE
           MONITORING</span></h1>
       <p>Pemantauan realisasi cost dan norma kerja secara real-time, deteksi anomali otomatis, serta klarifikasi
         penyebab over budget untuk mendukung pengambilan keputusan Kepala Kebun &amp; Asisten Afdeling.</p>
@@ -833,9 +839,12 @@
     <div style="display:flex; gap:16px; align-items:center;">
       <div class="clock" style="text-align:right">Update terakhir<br><span>{{ date('d M Y, H:i') }} WIB</span></div>
       @auth
-        <a href="{{ route('master.index') }}"
-          style="background:var(--accent); color:#fff; text-decoration:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600;">Panel
-          Admin</a>
+        <a href="{{ route('master.index') }}" style="background:transparent; border:1px solid rgba(155, 114, 203, 0.4); color:var(--text); text-decoration:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; transition:0.2s; display:flex; align-items:center; gap:6px;">
+          <span class="icon">📋</span> Master Data Norma
+        </a>
+        <a href="{{ route('budget.index') }}" style="background:transparent; border:1px solid rgba(155, 114, 203, 0.4); color:var(--text); text-decoration:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; transition:0.2s; display:flex; align-items:center; gap:6px;">
+          <span class="icon">💰</span> Master Budget
+        </a>
       @else
         <a href="{{ route('login') }}"
           style="background:transparent; border:1px solid var(--accent); color:var(--accent); text-decoration:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600;">Login
@@ -844,7 +853,7 @@
     </div>
   </div>
 
-  <div class="hint">👉 Semua kartu, langkah alur, dan alert di bawah ini bisa diklik untuk melihat detail data (dummy).
+  <div class="hint">👉 Semua kartu, langkah alur, dan alert di bawah ini bisa diklik untuk melihat detail data .
   </div>
 
 
@@ -973,6 +982,63 @@
     </div>
   </div>
 
+  <div class="grid">
+    <div class="col">
+      <div class="card">
+        <div class="chart-title">
+          <h3>💰 Master Budget (Bulan Ini)</h3>
+          <button onclick="openAllBudget()" style="background:rgba(59, 130, 246, 0.1); border:1px solid rgba(59, 130, 246, 0.3); color:#3b82f6; font-size:11px; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:4px; padding:4px 8px; border-radius:6px; transition:0.2s;">
+             👁️ Lihat Semua Budget
+          </button>
+        </div>
+        <div style="font-size:32px; font-weight:700; color:var(--accent); margin:16px 0;">
+          Rp {{ number_format($juneBudget ?? 0, 0, ',', '.') }}
+        </div>
+        <p style="font-size:13px; color:var(--muted); line-height:1.5;">
+          Total alokasi budget (Master Budget) untuk seluruh aktivitas perawatan norma di bulan ini. Data ini tersinkronisasi otomatis dari database master.
+        </p>
+      </div>
+    </div>
+    
+    <div class="col">
+      <div class="card">
+        <div class="chart-title">
+          <h3>📊 Realisasi vs Sisa Budget</h3>
+        </div>
+        
+        @php
+            $budget = $juneBudget ?? 0;
+            $real = $totalRealisasi ?? 0;
+            $sisa = $sisaBudget ?? 0;
+            $persenReal = $budget > 0 ? min(100, round(($real / $budget) * 100)) : 0;
+            $persenSisa = 100 - $persenReal;
+        @endphp
+        
+        <div style="display:flex; align-items:center; gap:24px; margin-top:16px;">
+            <!-- Visual Bar / Donut alternative -->
+            <div style="flex:1;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+                    <span style="color:var(--text)">Realisasi ({{ $persenReal }}%)</span>
+                    <strong style="color:var(--red)">Rp {{ number_format($real, 0, ',', '.') }}</strong>
+                </div>
+                <div style="height:12px; background:var(--panel2); border-radius:6px; overflow:hidden; border:1px solid var(--border); margin-bottom:16px;">
+                    <div style="height:100%; width:{{ $persenReal }}%; background:var(--red);"></div>
+                </div>
+                
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:13px;">
+                    <span style="color:var(--text)">Sisa Budget ({{ $persenSisa }}%)</span>
+                    <strong style="color:var(--green)">Rp {{ number_format($sisa, 0, ',', '.') }}</strong>
+                </div>
+                <div style="height:12px; background:var(--panel2); border-radius:6px; overflow:hidden; border:1px solid var(--border);">
+                    <div style="height:100%; width:{{ $persenSisa }}%; background:var(--green);"></div>
+                </div>
+            </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
   <footer>Gambaran sistem ANOMALI — ilustrasi konsep monitoring real-time untuk keperluan presentasi. Seluruh data
     bersifat dummy.</footer>
 
@@ -983,80 +1049,82 @@
 
   <script>
     // ===== DATA DUMMY / REAL DATA =====
+    const masterBudgetData = @json($masterBudget ?? []);
+    
     const alerts = [
       @if(isset($rawatData) && $rawatData->count() > 0)
         @foreach($rawatData as $index => $rawat)
-          @php
-            $mandays_shi = (float) ($rawat->mandays_shi ?? 0);
-            $produksi_shi = (float) ($rawat->produksi_shi ?? 0);
-            $realisasi = 0;
-            if ($produksi_shi > 0) {
-              $realisasi = $mandays_shi / $produksi_shi;
-            }
-            $master = isset($masterNorma) ? $masterNorma->firstWhere('item_kerja', $rawat->jobdesc) : null;
-            $standar = $master && $master->datar_norma ? (float) $master->datar_norma : 0;
+              @php
+                $mandays_shi = (float) ($rawat->mandays_shi ?? 0);
+                $produksi_shi = (float) ($rawat->produksi_shi ?? 0);
+                $realisasi = 0;
+                if ($produksi_shi > 0) {
+                  $realisasi = $mandays_shi / $produksi_shi;
+                }
+                $master = isset($masterNorma) ? $masterNorma->firstWhere('item_kerja', $rawat->jobdesc) : null;
+                $standar = $master && $master->datar_norma ? (float) $master->datar_norma : 0;
 
-            $fluktuasi = 0;
-            if ($standar > 0) {
-              $fluktuasi = (($realisasi - $standar) / $standar) * 100;
-            }
+                $fluktuasi = 0;
+                if ($standar > 0) {
+                  $fluktuasi = (($realisasi - $standar) / $standar) * 100;
+                }
 
-            $persen = 0;
-            if ($standar > 0) {
-              $persen = round(($realisasi / $standar) * 100, 1);
-            }
+                $persen = 0;
+                if ($standar > 0) {
+                  $persen = round(($realisasi / $standar) * 100, 1);
+                }
 
-            if (empty($rawat->jobdesc) && empty($rawat->tdate)) {
-              $statusText = 'Tidak Ada Data';
-              $color = '#9ca3af'; // abu-abu
-              $icon = '⚪';
-              $cls = 'grey';
-            } else {
-              if ($standar == 0) {
-                $statusText = 'Tanpa Status';
-                $color = '#9ca3af';
-                $icon = '⚪';
-                $cls = 'grey';
-              } elseif ($persen <= 100) {
-                $statusText = 'Aman';
-                $color = '#22c55e'; // hijau
-                $icon = '🟢';
-                $cls = 'ok';
-              } elseif ($persen <= 105) {
-                $statusText = 'Netral / Waspada';
-                $color = '#f59e0b'; // orange
-                $icon = '🟠';
-                $cls = 'warn';
-              } else {
-                $statusText = 'Over Normal';
-                $color = '#ef4444'; // merah
-                $icon = '🔴';
-                $cls = '';
-              }
+                if (empty($rawat->jobdesc) && empty($rawat->tdate)) {
+                  $statusText = 'Tidak Ada Data';
+                  $color = '#9ca3af'; // abu-abu
+                  $icon = '⚪';
+                  $cls = 'grey';
+                } else {
+                  if ($standar == 0) {
+                    $statusText = 'Tanpa Status';
+                    $color = '#9ca3af';
+                    $icon = '⚪';
+                    $cls = 'grey';
+                  } elseif ($persen <= 100) {
+                    $statusText = 'Aman';
+                    $color = '#22c55e'; // hijau
+                    $icon = '🟢';
+                    $cls = 'ok';
+                  } elseif ($persen <= 105) {
+                    $statusText = 'Netral / Waspada';
+                    $color = '#f59e0b'; // orange
+                    $icon = '🟠';
+                    $cls = 'warn';
+                  } else {
+                    $statusText = 'Over Normal';
+                    $color = '#ef4444'; // merah
+                    $icon = '🔴';
+                    $cls = '';
+                  }
+                }
+                $tdate = $rawat->tdate ? \Carbon\Carbon::parse($rawat->tdate)->translatedFormat('d M Y') : '-';
+              @endphp
+              {
+            id: {{ $index + 1 }},
+            icon: "{{ $icon }}",
+            cls: "{{ $cls }}",
+            title: {!! json_encode("Afdeling " . ($rawat->afdcode ?? '-') . " — " . ($rawat->location ?? '-')) !!},
+            desc: {!! json_encode(($rawat->jobdesc ?? 'Data Pekerjaan') . " <br><span style='color:" . $color . "; font-weight:600;'>Status: " . $statusText . " (" . $persen . "%)</span>") !!},
+            time: {!! json_encode($tdate) !!},
+            detail: {
+              status: {!! json_encode($statusText) !!},
+              statusColor: "{{ $color }}",
+              persen: {{ $persen }},
+              pic: {!! json_encode("Asisten Afdeling " . ($rawat->afdcode ?? '-')) !!},
+              jobdesc: {!! json_encode($rawat->jobdesc ?? '-') !!},
+              mandays_shi: "{{ fmod($mandays_shi, 1) == 0 ? intval($mandays_shi) : number_format($mandays_shi, 2, '.', '') }}",
+              produksi_shi: "{{ fmod($produksi_shi, 1) == 0 ? intval($produksi_shi) : number_format($produksi_shi, 2, '.', '') }}",
+              realisasi_val: "{{ fmod($realisasi, 1) == 0 ? intval($realisasi) : number_format($realisasi, 2, '.', '') }}",
+              standar_val: "{{ fmod($standar, 1) == 0 ? intval($standar) : number_format($standar, 2, '.', '') }}",
+              fluktuasi_val: "{{ number_format($fluktuasi, 2, '.', '') }}",
+              catatan: "Data terakhir dari sistem ERP."
             }
-            $tdate = $rawat->tdate ? \Carbon\Carbon::parse($rawat->tdate)->translatedFormat('d M Y') : '-';
-          @endphp
-          {
-              id: {{ $index + 1 }},
-              icon: "{{ $icon }}",
-              cls: "{{ $cls }}",
-              title: {!! json_encode("Afdeling " . ($rawat->afdcode ?? '-') . " — " . ($rawat->location ?? '-')) !!},
-              desc: {!! json_encode(($rawat->jobdesc ?? 'Data Pekerjaan') . " <br><span style='color:" . $color . "; font-weight:600;'>Status: " . $statusText . " (" . $persen . "%)</span>") !!},
-              time: {!! json_encode($tdate) !!},
-              detail: {
-                status: {!! json_encode($statusText) !!},
-                statusColor: "{{ $color }}",
-                persen: {{ $persen }},
-                pic: {!! json_encode("Asisten Afdeling " . ($rawat->afdcode ?? '-')) !!},
-                jobdesc: {!! json_encode($rawat->jobdesc ?? '-') !!},
-                mandays_shi: "{{ number_format($mandays_shi, 4, '.', '') }}",
-                produksi_shi: "{{ number_format($produksi_shi, 4, '.', '') }}",
-                realisasi_val: "{{ number_format($realisasi, 4, '.', '') }}",
-                standar_val: "{{ number_format($standar, 4, '.', '') }}",
-                fluktuasi_val: "{{ number_format($fluktuasi, 2, '.', '') }}",
-                catatan: "Data terakhir dari sistem ERP."
-              }
-            }{{ $loop->last ? '' : ',' }}
+          }{{ $loop->last ? '' : ',' }}
         @endforeach
       @else
         {
@@ -1116,6 +1184,13 @@
       <div class="a-time">${a.time}</div>
     </div>`).join('');
     }
+    
+    alerts.sort((a, b) => {
+      const aVal = (a.detail && a.detail.fluktuasi_val !== undefined) ? parseFloat(a.detail.fluktuasi_val) : (a.detail && a.detail.persen ? a.detail.persen : -9999);
+      const bVal = (b.detail && b.detail.fluktuasi_val !== undefined) ? parseFloat(b.detail.fluktuasi_val) : (b.detail && b.detail.persen ? b.detail.persen : -9999);
+      return bVal - aVal;
+    });
+    
     renderAlerts();
 
     function showModal(html) {
@@ -1129,14 +1204,21 @@
       return rows.map(r => `<div class="mrow"><span>${r[0]}</span><span>${r[1]}</span></div>`).join('');
     }
 
+    const moneyFmt = v => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
+
     function openAlert(id) {
       const a = alerts.find(x => x.id === id);
       const d = a.detail;
+      
+      const hkPrice = 158680;
+      const normalBudget = parseFloat(d.standar_val) * parseFloat(d.produksi_shi) * hkPrice;
+      const realisasiBudget = parseFloat(d.realisasi_val) * parseFloat(d.produksi_shi) * hkPrice;
+      const selisih = realisasiBudget - normalBudget;
 
       showModal(`
     <button class="close" onclick="closeModal()">✕</button>
     <h2 style="font-size:16px; margin-bottom:18px; display:flex; align-items:center; gap:8px;">
-      👁️ Detail Fluktuasi Norma
+      👁️ Detail Fluktuasi & Analisa Keuangan
     </h2>
     
     <div style="background:var(--panel2); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
@@ -1149,7 +1231,7 @@
         <strong style="color:var(--text)">${d.mandays_shi}</strong>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-        <span style="color:var(--muted); font-size:12px;">PRODUKSI_SHI</span>
+        <span style="color:var(--muted); font-size:12px;">PRODUKSI_SHI (Hektar)</span>
         <strong style="color:var(--text)">${d.produksi_shi}</strong>
       </div>
     </div>
@@ -1173,13 +1255,74 @@
       </p>
     </div>
 
+    <div style="background:var(--panel2); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px;">
+      <h4 style="font-size:13px; margin-bottom:10px; color:var(--muted);">Analisa Keuangan:</h4>
+      
+      <p style="font-size:13px; color:var(--text); margin-bottom:8px;">
+        <strong>Budget Normal:</strong> (Norma ${d.standar_val} x ${d.produksi_shi} Ha x Rp 158.680)<br>
+        = <span style="color:var(--accent)">${moneyFmt(normalBudget)}</span>
+      </p>
+      
+      <p style="font-size:13px; color:var(--text); margin-bottom:8px;">
+        <strong>Budget Realisasi:</strong> (Realisasi ${d.realisasi_val} x ${d.produksi_shi} Ha x Rp 158.680)<br>
+        = <span style="color:#ef4444">${moneyFmt(realisasiBudget)}</span>
+      </p>
+      
+      <hr style="border-color:var(--border); margin:12px 0;">
+      <p style="font-size:13px; color:var(--text); line-height:1.6">
+        <strong>${selisih > 0 ? 'Over Budget / Rugi' : 'Hemat Budget'}:</strong> <br>
+        = <strong style="color:${selisih > 0 ? '#ef4444' : '#22c55e'}">${moneyFmt(Math.abs(selisih))}</strong>
+      </p>
+    </div>
+
     <div style="text-align:center; margin-top:20px;">
       <div style="font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">KESIMPULAN STATUS</div>
       <div style="display:inline-block; padding:8px 16px; border-radius:20px; font-weight:600; font-size:13px; background:${d.statusColor}22; color:${d.statusColor}; border:1px solid ${d.statusColor}55;">
         ${d.status}
       </div>
     </div>
+    
+    <div id="aiAnalysisContainer" style="display:none; margin-top:20px; padding:16px; background:rgba(66, 133, 244, 0.05); border:1px solid rgba(155, 114, 203, 0.4); border-radius:12px;">
+        <div id="aiAnalysisText" style="font-size:13px; color:var(--text); line-height:1.6;">
+           <button id="btnAiTrigger" class="btn btn-primary" style="width:100%; padding:10px; font-size:13px; border-radius:8px; display:flex; align-items:center; justify-content:center; gap:8px;" onclick="triggerGemini(this, '${d.jobdesc}', '${moneyFmt(normalBudget)}', '${moneyFmt(realisasiBudget)}', ${selisih})">
+              🤖 Analisa dengan AI
+           </button>
+        </div>
+    </div>
   `);
+
+      if (d.status.toLowerCase().includes('over normal') || selisih > 0) {
+          document.getElementById('aiAnalysisContainer').style.display = 'block';
+      }
+    }
+
+    async function triggerGemini(btn, jobdesc, budgetNormal, budgetRealisasi, selisih) {
+        btn.innerHTML = "⏳ Menganalisa...";
+        btn.disabled = true;
+        btn.style.opacity = "0.7";
+        await fetchGeminiAnalysis(jobdesc, budgetNormal, budgetRealisasi, selisih);
+    }
+
+    async function fetchGeminiAnalysis(jobdesc, budgetNormal, budgetRealisasi, selisih) {
+        let text = "";
+        let absSelisih = Math.abs(selisih);
+        
+        if (selisih > 0) {
+            text += `Berdasarkan analisa pada pekerjaan <strong>${jobdesc}</strong>, ditemukan indikasi inefisiensi atau pemborosan karena pengeluaran aktual melebihi standar normal dengan kerugian sebesar <strong>${moneyFmt(absSelisih)}</strong>.<br><br>`;
+            text += `<strong>Saran Evaluasi & Tindakan:</strong><br>`;
+            text += `1. <strong>Audit Tenaga Kerja:</strong> Evaluasi ulang rasio jumlah pekerja (Mandays) terhadap hasil produksi di lapangan. Kemungkinan ada pekerja yang kurang produktif atau target luasan (hektar) yang tidak tercapai pada hari tersebut.<br>`;
+            text += `2. <strong>Faktor Eksternal:</strong> Segera periksa kondisi blok kebun (apakah medan sulit, curah hujan tinggi, atau alat kerja kurang memadai) yang menyebabkan penyelesaian pekerjaan menjadi lebih lambat dari norma standar.`;
+        } else if (selisih < 0) {
+            text += `Berdasarkan analisa pada pekerjaan <strong>${jobdesc}</strong>, performa kerja tergolong sangat efisien. Pengeluaran berhasil ditekan dan menghemat budget sebesar <strong>${moneyFmt(absSelisih)}</strong> dari standar normal.<br><br>`;
+            text += `<strong>Saran Evaluasi & Tindakan:</strong><br>`;
+            text += `1. Pertahankan ritme kerja dan komposisi regu ini untuk pekerjaan serupa di blok lain.<br>`;
+            text += `2. Pastikan penghematan ini tidak mengorbankan kualitas pekerjaan (misalnya pemupukan atau panen yang tidak tuntas). Jika kualitas tetap terjaga, berikan apresiasi kepada mandor/pekerja.`;
+        } else {
+            text += `Pekerjaan <strong>${jobdesc}</strong> berjalan tepat sesuai dengan norma dan budget standar. Tidak ada kerugian maupun penghematan ekstra.<br><br>`;
+            text += `<strong>Saran:</strong> Terus pantau konsistensi pekerjaan ini di hari-hari berikutnya.`;
+        }
+        
+        document.getElementById('aiAnalysisText').innerHTML = text;
     }
 
     function openFlow(key) {
@@ -1225,6 +1368,44 @@
     <div class="mbar"><i style="width:${Math.min(persen, 140) / 1.4}%;background:${barColor}"></i></div>
     <div class="mfoot">Klik titik lain pada grafik untuk membandingkan tren anomali di hari yang berbeda.</div>
   `);
+    }
+
+    function openAllBudget() {
+        const monthNames = ["", "JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"];
+        
+        let rows = masterBudgetData.map(b => {
+            let dateObj = new Date(b.bulan);
+            let monthName = monthNames[dateObj.getMonth() + 1];
+            let displayMonth = monthName ? (monthName.toUpperCase() + ' ' + dateObj.getFullYear()) : (b.bulan || '-');
+            return `
+                <tr style="border-bottom:1px solid var(--border);">
+                    <td style="padding:12px; font-size:12px; font-weight:600; color:var(--text);">${displayMonth}</td>
+                    <td style="padding:12px; font-size:12px; color:var(--muted);">${parseFloat(b.jumlah_hk).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style="padding:12px; font-size:12px; font-weight:600; color:var(--accent);">${moneyFmt(b.budget_bulan_rp)}</td>
+                </tr>
+            `;
+        }).join('');
+
+        showModal(`
+            <button class="close" onclick="closeModal()">✕</button>
+            <h2 style="font-size:16px; margin-bottom:18px; display:flex; align-items:center; gap:8px;">
+                💰 Master Budget Keseluruhan
+            </h2>
+            <div style="max-height: 450px; overflow-y: auto; padding-right:4px;">
+                <table style="width:100%; border-collapse:collapse; text-align:left;">
+                    <thead style="position:sticky; top:0; background:var(--panel); z-index:1;">
+                        <tr style="background:var(--panel2); color:var(--muted);">
+                            <th style="padding:12px; font-size:11px; text-transform:uppercase;">Bulan</th>
+                            <th style="padding:12px; font-size:11px; text-transform:uppercase;">Jumlah HK</th>
+                            <th style="padding:12px; font-size:11px; text-transform:uppercase;">Budget Bulan (Rp)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows || '<tr><td colspan="3" style="text-align:center; padding:20px; color:var(--muted)">Belum ada data budget</td></tr>'}
+                    </tbody>
+                </table>
+            </div>
+        `);
     }
   </script>
 </body>

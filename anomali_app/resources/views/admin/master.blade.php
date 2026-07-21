@@ -312,12 +312,40 @@
     ::-webkit-scrollbar-thumb { background:rgba(56,189,130,0.2); border-radius:100px; }
     ::-webkit-scrollbar-thumb:hover { background:rgba(56,189,130,0.4); }
     @media(max-width:1100px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
-    @media(max-width:768px) { .main-wrap { margin-left:0; } .form-grid { grid-template-columns:1fr; } .content { padding:16px; } }
+    
+    /* MOBILE RESPONSIVE SIDEBAR */
+    .mobile-menu-btn {
+      display: none;
+      background: none; border: none; color: var(--text-1); font-size: 24px; cursor: pointer;
+      margin-right: 12px;
+    }
+    .sidebar-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
+      z-index: 95; display: none; opacity: 0; transition: opacity 0.3s;
+    }
+    .sidebar-overlay.show { display: block; opacity: 1; }
+    
+    @media(max-width:768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      .main-wrap { margin-left: 0; }
+      .mobile-menu-btn { display: block; }
+      .form-grid { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+      .topbar { padding: 0 16px; }
+    }
+
   </style>
   <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
 
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-icon">🌴</div>
@@ -334,6 +362,9 @@
     
     <a href="{{ route('master.index') }}" class="nav-item {{ request()->routeIs('master.index') ? 'active' : '' }}">
       <span class="icon">📋</span> Master Data Norma
+    </a>
+    <a href="{{ route('budget.index') }}" class="nav-item {{ request()->routeIs('budget.index') ? 'active' : '' }}">
+      <span class="icon">💰</span> Master Budget
     </a>
     <a href="{{ route('rawat.index') }}" class="nav-item {{ request()->routeIs('rawat.index') ? 'active' : '' }}">
       <span class="icon">🌱</span> Data Norma Rawat
@@ -358,6 +389,7 @@
 
 <div class="main-wrap">
   <header class="topbar">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
     <div class="breadcrumb">Home &rsaquo; <span>Master Data Norma</span></div>
     <div class="topbar-right">
       <div class="badge-dot"></div>
@@ -920,6 +952,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 @endif
+
+<script>
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    if (sidebar.classList.contains('show')) {
+      sidebar.classList.remove('show');
+      overlay.classList.remove('show');
+    } else {
+      sidebar.classList.add('show');
+      overlay.classList.add('show');
+    }
+  }
+</script>
+
 </body>
 
 </html>

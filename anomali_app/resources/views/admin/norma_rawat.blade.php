@@ -319,12 +319,40 @@
     ::-webkit-scrollbar-thumb { background:rgba(56,189,130,0.2); border-radius:100px; }
     ::-webkit-scrollbar-thumb:hover { background:rgba(56,189,130,0.4); }
     @media(max-width:1100px) { .stats-grid { grid-template-columns:repeat(2,1fr); } }
-    @media(max-width:768px) { .main-wrap { margin-left:0; } .form-grid { grid-template-columns:1fr; } .content { padding:16px; } }
+    
+    /* MOBILE RESPONSIVE SIDEBAR */
+    .mobile-menu-btn {
+      display: none;
+      background: none; border: none; color: var(--text-1); font-size: 24px; cursor: pointer;
+      margin-right: 12px;
+    }
+    .sidebar-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);
+      z-index: 95; display: none; opacity: 0; transition: opacity 0.3s;
+    }
+    .sidebar-overlay.show { display: block; opacity: 1; }
+    
+    @media(max-width:768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+      .sidebar.show {
+        transform: translateX(0);
+      }
+      .main-wrap { margin-left: 0; }
+      .mobile-menu-btn { display: block; }
+      .form-grid { grid-template-columns: 1fr; }
+      .content { padding: 16px; }
+      .topbar { padding: 0 16px; }
+    }
+
   </style>
   <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body>
 
+<div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 <aside class="sidebar">
   <div class="sidebar-logo">
     <div class="logo-icon">🌴</div>
@@ -341,6 +369,9 @@
     
     <a href="{{ route('master.index') }}" class="nav-item {{ request()->routeIs('master.index') ? 'active' : '' }}">
       <span class="icon">📋</span> Master Data Norma
+    </a>
+    <a href="{{ route('budget.index') }}" class="nav-item {{ request()->routeIs('budget.index') ? 'active' : '' }}">
+      <span class="icon">💰</span> Master Budget
     </a>
     <a href="{{ route('rawat.index') }}" class="nav-item {{ request()->routeIs('rawat.index') ? 'active' : '' }}">
       <span class="icon">🌱</span> Data Norma Rawat
@@ -365,6 +396,7 @@
 
 <div class="main-wrap">
   <header class="topbar">
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
     <div class="breadcrumb">Home &rsaquo; <span>Data Norma Rawat</span></div>
     <div class="topbar-right">
       <div class="badge-dot"></div>
@@ -738,9 +770,9 @@ function renderTable() {
   }
 
   const fmt = v => (v===null||v===undefined||v==='') ? '<span style="color:var(--text-3)">–</span>'
-    : `<span class="num-cell">${typeof v==='number'?numFmt(v):v}</span>`;
+    : `<span class="num-cell">${!isNaN(Number(v)) ? numFmt(Number(v)) : v}</span>`;
   const fmtA = v => (v===null||v===undefined||v==='') ? '<span style="color:var(--text-3)">–</span>'
-    : `<span class="num-cell accent">${typeof v==='number'?numFmt(v):v}</span>`;
+    : `<span class="num-cell accent">${!isNaN(Number(v)) ? numFmt(Number(v)) : v}</span>`;
 
         tbody.innerHTML = page.map((r, i) => {
     
@@ -805,8 +837,10 @@ function renderTable() {
 }
 
 function numFmt(v) {
-  if (Number.isInteger(v)) return v.toString();
-  return parseFloat(v.toFixed(4)).toString();
+  const n = Number(v);
+  if (isNaN(n)) return v;
+  if (Number.isInteger(n)) return n.toString();
+  return n.toFixed(2);
 }
 function pageRange(cur, total) {
   if (total<=7) return Array.from({length:total},(_,i)=>i+1);
@@ -889,11 +923,11 @@ function openDetail(id) {
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
         <span style="color:var(--text-3); font-size:12px;">MANDAYS_SHI</span>
-        <strong style="color:var(--text-1)">${r.mandays_shi || 0}</strong>
+        <strong style="color:var(--text-1)">${numFmt(r.mandays_shi || 0)}</strong>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
         <span style="color:var(--text-3); font-size:12px;">PRODUKSI_SHI</span>
-        <strong style="color:var(--text-1)">${r.produksi_shi || 0}</strong>
+        <strong style="color:var(--text-1)">${numFmt(r.produksi_shi || 0)}</strong>
       </div>
     </div>
     
@@ -901,17 +935,17 @@ function openDetail(id) {
       <h4 style="font-size:13px; margin-bottom:10px; color:var(--text-2);">Rumus Perhitungan:</h4>
       <p style="font-size:13px; color:var(--text-1); margin-bottom:8px;">
         <strong>Realisasi:</strong> MANDAYS_SHI / PRODUKSI_SHI<br>
-        = ${r.mandays_shi || 0} / ${r.produksi_shi || 0} <br>
-        = <span style="color:var(--accent-l)">${realisasi.toFixed(4)}</span>
+        = ${numFmt(r.mandays_shi || 0)} / ${numFmt(r.produksi_shi || 0)} <br>
+        = <span style="color:var(--accent-l)">${realisasi.toFixed(2)}</span>
       </p>
       <p style="font-size:13px; color:var(--text-1); margin-bottom:8px;">
         <strong>Norma Standar (Master Datar):</strong><br>
-        = <span style="color:var(--info)">${standar.toFixed(4)}</span>
+        = <span style="color:var(--info)">${standar.toFixed(2)}</span>
       </p>
       <hr style="border-color:var(--border); margin:12px 0;">
       <p style="font-size:13px; color:var(--text-1); line-height:1.6">
         <strong>Fluktuasi:</strong> ((Realisasi - Standar) / Standar) * 100% <br>
-        = ((${realisasi.toFixed(4)} - ${standar.toFixed(4)}) / ${standar.toFixed(4)}) * 100% <br>
+        = ((${realisasi.toFixed(2)} - ${standar.toFixed(2)}) / ${standar.toFixed(2)}) * 100% <br>
         = <strong>${fluktuasi.toFixed(2)}%</strong>
       </p>
     </div>
@@ -1220,6 +1254,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 @endif
+
+<script>
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    if (sidebar.classList.contains('show')) {
+      sidebar.classList.remove('show');
+      overlay.classList.remove('show');
+    } else {
+      sidebar.classList.add('show');
+      overlay.classList.add('show');
+    }
+  }
+</script>
+
 </body>
 
 </html>
