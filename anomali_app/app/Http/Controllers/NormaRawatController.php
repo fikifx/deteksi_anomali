@@ -25,8 +25,22 @@ class NormaRawatController extends Controller
     public function update(Request $request, $id)
     {
         $item = NormaRawat::findOrFail($id);
-        $item->update($request->all());
-        $this->checkAnomaly($item);
+        
+        // Handle klarifikasi via Telegram
+        if ($request->has('klarifikasi')) {
+            $item->update(['klarifikasi' => $request->klarifikasi]);
+            
+            $msg = "💬 <b>KLARIFIKASI ANOMALI</b>\n\n";
+            $msg .= "<b>JOBDESC:</b> " . ($item->jobdesc ?? '-') . "\n";
+            $msg .= "<b>LOKASI:</b> " . ($item->location ?? '-') . "\n";
+            $msg .= "<b>KLARIFIKASI:</b>\n" . $request->klarifikasi;
+            
+            \App\Services\TelegramService::sendMessage($msg);
+        } else {
+            $item->update($request->all());
+            $this->checkAnomaly($item);
+        }
+        
         return response()->json(['success' => true]);
     }
 
