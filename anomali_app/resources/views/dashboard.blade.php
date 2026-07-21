@@ -1103,12 +1103,21 @@
                   }
                 }
                 $tdate = $rawat->tdate ? \Carbon\Carbon::parse($rawat->tdate)->translatedFormat('d M Y') : '-';
+                
+                $klarifikasiBadge = '';
+                if ($statusText == 'Over Normal') {
+                  if (!empty($rawat->klarifikasi)) {
+                    $klarifikasiBadge = ' <span style="font-size:10px; padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.2); color:#22c55e; margin-left:6px; vertical-align:middle;">✅ Diklarifikasi</span>';
+                  } else {
+                    $klarifikasiBadge = ' <span style="font-size:10px; padding:2px 6px; border-radius:4px; background:rgba(239,68,68,0.2); color:#ef4444; margin-left:6px; vertical-align:middle;">⚠️ Belum Diklarifikasi</span>';
+                  }
+                }
               @endphp
               {
             id: {{ $index + 1 }},
             icon: "{{ $icon }}",
             cls: "{{ $cls }}",
-            title: {!! json_encode("Afdeling " . ($rawat->afdcode ?? '-') . " — " . ($rawat->location ?? '-')) !!},
+            title: {!! json_encode("Afdeling " . ($rawat->afdcode ?? '-') . " — " . ($rawat->location ?? '-')) !!} + {!! json_encode($klarifikasiBadge) !!},
             desc: {!! json_encode(($rawat->jobdesc ?? 'Data Pekerjaan') . " <br><span style='color:" . $color . "; font-weight:600;'>Status: " . $statusText . " (" . $persen . "%)</span>") !!},
             time: {!! json_encode($tdate) !!},
             detail: {
@@ -1122,6 +1131,7 @@
               realisasi_val: "{{ fmod($realisasi, 1) == 0 ? intval($realisasi) : number_format($realisasi, 2, '.', '') }}",
               standar_val: "{{ fmod($standar, 1) == 0 ? intval($standar) : number_format($standar, 2, '.', '') }}",
               fluktuasi_val: "{{ number_format($fluktuasi, 2, '.', '') }}",
+              klarifikasi: {!! json_encode($rawat->klarifikasi ?? null) !!},
               catatan: "Data terakhir dari sistem ERP."
             }
           }{{ $loop->last ? '' : ',' }}
@@ -1274,6 +1284,12 @@
         = <strong style="color:${selisih > 0 ? '#ef4444' : '#22c55e'}">${moneyFmt(Math.abs(selisih))}</strong>
       </p>
     </div>
+
+    ${d.klarifikasi ? `
+    <div style="background:var(--panel2); padding:16px; border-radius:12px; border:1px solid var(--border); margin-bottom:16px; border-left: 4px solid var(--accent);">
+      <h4 style="font-size:13px; margin-bottom:10px; color:var(--muted);">💬 Klarifikasi Asisten Afdeling:</h4>
+      <p style="font-size:13px; color:var(--text); line-height:1.6; white-space:pre-wrap; margin:0;">${d.klarifikasi}</p>
+    </div>` : ''}
 
     <div style="text-align:center; margin-top:20px;">
       <div style="font-size:11px; color:var(--muted); text-transform:uppercase; margin-bottom:8px;">KESIMPULAN STATUS</div>
